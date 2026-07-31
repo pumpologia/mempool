@@ -34,6 +34,7 @@ import statistics from './statistics/statistics';
 import { calcBitsDifference } from './difficulty-adjustment';
 import AccelerationRepository from '../repositories/AccelerationRepository';
 import { calculateGoodBlockCpfp } from './cpfp';
+import { computeMinFeeRate, MIN_CPFP_SUMMARY_VERSION } from './mining/min-fee-rate';
 import blockProcessor, { BlockProcessingResult, detectTemplateAlgorithm, saveCpfpDataToCpfpSummary } from './block-processor';
 import mempool from './mempool';
 import CpfpRepository from '../repositories/CpfpRepository';
@@ -625,6 +626,23 @@ class Blocks {
         expectedWeight: processingResult.auditResult.expectedWeight,
       });
       this.updateTimerProgress(timer, `saved audit results for ${this.currentBlockHeight}`);
+    }
+
+    // Live min_fee_rate: reuse the CPFP pass already computed above rather than running a
+    // second makeBlockTemplate. Only version >= MIN_CPFP_SUMMARY_VERSION carries a
+    // CPFP-adjusted rate and per-tx cluster data; a Fast-indexed block is left to the
+    // backfill, which runs makeBlockTemplate directly and covers it regardless.
+    if (config.MEMPOOL.NETWORK === 'mainnet' && cpfpSummary.version >= MIN_CPFP_SUMMARY_VERSION) {
+      try {
+        const acceleratedTxids = await AccelerationRepository.$getAcceleratedTxidsAtHeight(blockExtended.height);
+        const rate = computeMinFeeRate(cpfpSummary.transactions, new Set(acceleratedTxids));
+        await blocksRepository.$updateMinFeeRate(blockExtended.height, blockExtended.id, rate);
+      } catch (e) {
+        logger.debug(`failed to compute live min_fee_rate for ${blockExtended.height}: ` + (e instanceof Error ? e.message : e));
+      }
+
+      // Covers Fast-indexed blocks, gaps and algorithm-version upgrades.
+      indexer.scheduleSingleTask('minFeeRate', 10000);
     }
   }
 
