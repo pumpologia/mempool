@@ -7,7 +7,7 @@ import cpfpRepository from '../repositories/CpfpRepository';
 import { RowDataPacket } from 'mysql2';
 
 class DatabaseMigration {
-  private static currentVersion = 113;
+  private static currentVersion = 114;
   private queryTimeout = 3600_000;
   private statisticsAddedIndexed = false;
   private uniqueLogs: string[] = [];
@@ -1264,6 +1264,26 @@ class DatabaseMigration {
     if (databaseSchemaVersion < 113) {
       await this.$executeQuery('ALTER TABLE `blocks` ADD coinbase_bip_54 TINYINT(1) NULL DEFAULT NULL');
       await this.updateToSchemaVersion(113);
+    }
+
+    // Mainnet only: the exclusion set is read from `accelerations`, which only exists there.
+    if (databaseSchemaVersion < 114 && config.MEMPOOL.NETWORK === 'mainnet') {
+      // Per-block minimum fee-merit effective fee rate (issue #6639). Columns and index
+      // are separate statements to keep the column add on ALGORITHM=INSTANT; combining
+      // them would rebuild the whole blocks table during startup migration.
+      await this.$executeQuery(`
+        ALTER TABLE blocks
+          ADD min_fee_rate DOUBLE UNSIGNED NULL DEFAULT NULL,
+          ADD min_fee_rate_version TINYINT UNSIGNED NOT NULL DEFAULT 0,
+          ADD min_fee_rate_computed_at TIMESTAMP NULL DEFAULT NULL
+      `);
+      // Covering index for the daily aggregation: version equality and blockTimestamp
+      // range prune, the rest is read from the index so the hash primary key is never hit.
+      await this.$executeQuery(`
+        ALTER TABLE blocks
+          ADD INDEX min_fee_rate_series (min_fee_rate_version, blockTimestamp, stale, min_fee_rate, height)
+      `);
+      await this.updateToSchemaVersion(114);
     }
   }
 
