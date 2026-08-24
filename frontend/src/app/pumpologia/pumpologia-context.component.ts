@@ -50,7 +50,8 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
         takeUntil(this.requestChanged$),
         takeUntil(this.destroy$),
       ).subscribe(operation => {
-        this.operations = operation ? [operation as unknown as PumpologiaOperation] : [];
+        const record = operation as { operations?: PumpologiaOperation[] } | null;
+        this.operations = Array.isArray(record?.operations) ? record.operations : [];
         this.cd.markForCheck();
       });
       return;
@@ -70,7 +71,7 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
     }
 
     if (Number.isSafeInteger(this.blockHeight) && (this.blockHeight as number) >= 0) {
-      this.pumpologiaApi.getOperations$(200, undefined, { block_height: this.blockHeight as number }).pipe(
+      this.pumpologiaApi.getOperations$(100, undefined, { block_height: this.blockHeight as number }).pipe(
         catchError(() => of({ items: [] })),
         takeUntil(this.requestChanged$),
         takeUntil(this.destroy$),
