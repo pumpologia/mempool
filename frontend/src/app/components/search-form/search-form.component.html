@@ -1,7 +1,7 @@
 <form [class]="{hamburgerOpen: hamburgerOpen}" [formGroup]="searchForm" (submit)="searchForm.valid && search()" novalidate>
   <div class="d-flex">
     <div class="search-box-container me-2">
-      <input #searchInput (focus)="focus$.next($any($event).target.value)" (click)="click$.next($any($event).target.value)" formControlName="searchText" type="text" class="form-control" placeholder="Block, transaction, address or Pumpologia ticker" aria-label="Search Bitcoin and Pumpologia">
+      <input #searchInput (focus)="focus$.next($any($event).target.value)" (click)="click$.next($any($event).target.value)" formControlName="searchText" type="text" class="form-control" placeholder="Position, transaction or block" aria-label="Search Pumpologia positions and proofs">
       <app-search-results #searchResults [hidden]="dropdownHidden" [results]="typeAhead$ | async" (selectedResult)="selectedResult($event)"></app-search-results>
     </div>
     <div>
