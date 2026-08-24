@@ -4,6 +4,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { BlockComponent } from '@components/block/block.component';
 import { BlockTransactionsComponent } from '@components/block/block-transactions.component';
 import { SharedModule } from '@app/shared/shared.module';
+import { PumpologiaContextComponent } from '@app/pumpologia/pumpologia-context.component';
 
 const routes: Routes = [
   {
@@ -30,6 +31,7 @@ export class BlockRoutingModule { }
     CommonModule,
     BlockRoutingModule,
     SharedModule,
+    PumpologiaContextComponent,
   ],
   declarations: [
     BlockComponent,
@@ -37,7 +39,6 @@ export class BlockRoutingModule { }
   ]
 })
 export class BlockModule { }
-
 
 
 

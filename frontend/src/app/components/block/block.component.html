@@ -1,5 +1,7 @@
 <div class="container-xl" (window:resize)="onResize($event)">
 
+  <app-pumpologia-context *ngIf="network === '' && blockHeight != null" [blockHeight]="blockHeight"></app-pumpologia-context>
+
   <div class="title-block" [class.time-ltr]="timeLtr" id="block">
     <div *ngIf="block?.stale" class="alert alert-mempool" role="alert">
       <span i18n="block.reorged|Block reorg" class="alert-text">This block does not belong to the main chain, it has been replaced by:</span>

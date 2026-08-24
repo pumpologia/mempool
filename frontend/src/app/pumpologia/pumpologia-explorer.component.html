@@ -1,0 +1,224 @@
+<div class="container-xl protocol-page">
+  <header class="protocol-hero">
+    <div>
+      <a *ngIf="detailKind !== 'overview'" class="back-link" [routerLink]="['/protocol' | relativeUrl]">← Protocol overview</a>
+      <div class="eyebrow">Pumpologia v1 · Bitcoin mainnet</div>
+      <h1 *ngIf="detailKind === 'overview'">Protocol explorer</h1>
+      <h1 *ngIf="detailKind !== 'overview'">{{ detailKind | titlecase }} detail</h1>
+      <p *ngIf="detailKind === 'overview'">A deterministic view of Pumpologia tokens, positions and settlement events—anchored to the Bitcoin transactions and blocks that created them.</p>
+      <p *ngIf="detailKind !== 'overview'" class="detail-id">{{ detailId }}</p>
+    </div>
+    <ng-container *ngIf="summary$ | async as summary">
+      <div class="sync-pill" title="Latest Pumpologia indexer checkpoint">
+        <span class="status-dot"></span>
+        Indexed at {{ summary.sync.checkpoint_height | number }}
+      </div>
+    </ng-container>
+  </header>
+
+  <div *ngIf="apiError" class="protocol-alert" role="alert">
+    Live protocol data is temporarily unavailable. Bitcoin explorer pages are not affected.
+  </div>
+
+  <ng-container *ngIf="detailKind === 'overview'; else detailView">
+    <ng-container *ngIf="summary$ | async as summary; else loadingSummary">
+      <section class="protocol-metrics" aria-label="Protocol summary">
+        <article>
+          <span>Indexer checkpoint</span>
+          <strong>{{ summary.sync.checkpoint_height | number }}</strong>
+          <a [routerLink]="['/block' | relativeUrl, summary.sync.checkpoint_hash]">Open Bitcoin block</a>
+        </article>
+        <article>
+          <span>Protocol operations</span>
+          <strong>{{ summary.sync.operation_count | number }}</strong>
+          <small>Valid indexed events</small>
+        </article>
+        <article>
+          <span>Positions</span>
+          <strong>{{ summary.position_counts.total | number }}</strong>
+          <small>{{ summary.position_counts.by_state.OPEN || 0 }} currently open</small>
+        </article>
+        <article>
+          <span>Indexed traders</span>
+          <strong>{{ summary.leaderboard.total | number }}</strong>
+          <small>Accounts with settled trades</small>
+        </article>
+      </section>
+
+      <section id="tokens" class="protocol-section">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">Assets</span>
+            <h2>Protocol tokens</h2>
+          </div>
+          <span class="count-label">{{ summary.tokens.length }} token{{ summary.tokens.length === 1 ? '' : 's' }}</span>
+        </div>
+        <div class="token-grid">
+          <a *ngFor="let token of summary.tokens" class="token-card" [routerLink]="['/protocol/token' | relativeUrl, token.token_id]">
+            <div class="token-symbol">{{ token.tick_canonical | uppercase }}</div>
+            <span class="state-badge state-active">{{ token.state }}</span>
+            <dl>
+              <div><dt>Net supply</dt><dd>{{ formatAtoms(token.net_supply_atoms) }}</dd></div>
+              <div><dt>Maximum</dt><dd>{{ token.max_supply_tokens | number }}</dd></div>
+              <div><dt>Active since</dt><dd>#{{ token.first_active_height | number }}</dd></div>
+            </dl>
+          </a>
+        </div>
+      </section>
+    </ng-container>
+
+    <section id="positions" class="protocol-section">
+      <div class="section-heading filter-heading">
+        <div>
+          <span class="section-kicker">Markets</span>
+          <h2>Positions</h2>
+        </div>
+        <div class="filters">
+          <label>
+            <span>State</span>
+            <select class="form-select form-select-sm" [value]="positionState" (change)="setPositionState($any($event.target).value)">
+              <option *ngFor="let state of stateOptions" [value]="state">{{ state || 'All states' }}</option>
+            </select>
+          </label>
+          <label>
+            <span>Direction</span>
+            <select class="form-select form-select-sm" [value]="positionDirection" (change)="setPositionDirection($any($event.target).value)">
+              <option *ngFor="let direction of directionOptions" [value]="direction">{{ direction || 'Both' }}</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <ng-container *ngIf="positions$ | async as positions; else loadingTable">
+        <div class="table-shell">
+          <table class="table protocol-table">
+            <thead>
+              <tr><th>Position</th><th>Market</th><th>Direction</th><th>Margin</th><th>Leverage</th><th>Opened</th><th>State</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let position of positions.items">
+                <td><a [routerLink]="['/protocol/position' | relativeUrl, position.position_id]" [title]="position.position_id">{{ shortHash(position.position_id, 8, 4) }}</a></td>
+                <td>{{ position.tick_canonical | uppercase }}</td>
+                <td><span class="direction" [class.short]="position.direction === 'short'">{{ position.direction }}</span></td>
+                <td>{{ formatSats(position.amt_sats) }} sats</td>
+                <td>{{ position.leverage | number }}×</td>
+                <td><a [routerLink]="['/block' | relativeUrl, position.open_height]">#{{ position.open_height | number }}</a></td>
+                <td><span class="state-badge" [class.state-active]="position.state === 'OPEN'">{{ position.state }}</span></td>
+              </tr>
+              <tr *ngIf="!positions.items.length"><td colspan="7" class="empty-state">No positions match these filters.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-pagination">
+          <span>{{ positionOffset + 1 }}–{{ positionOffset + positions.items.length }} of {{ positions.total }}</span>
+          <div>
+            <button class="btn btn-sm btn-secondary" [disabled]="positionOffset === 0" (click)="changePositionPage(-1)">Previous</button>
+            <button class="btn btn-sm btn-secondary" [disabled]="positionOffset + positions.items.length >= positions.total" (click)="changePositionPage(1)">Next</button>
+          </div>
+        </div>
+      </ng-container>
+    </section>
+
+    <section id="leaderboard" class="protocol-section">
+      <div class="section-heading filter-heading">
+        <div>
+          <span class="section-kicker">Performance</span>
+          <h2>Leaderboard</h2>
+        </div>
+        <label class="period-filter">
+          <span>Period</span>
+          <select class="form-select form-select-sm" [value]="leaderboardPeriod" (change)="setLeaderboardPeriod($any($event.target).value)">
+            <option value="all">All time</option>
+            <option value="24h">24 hours</option>
+            <option value="7d">7 days</option>
+            <option value="30d">30 days</option>
+          </select>
+        </label>
+      </div>
+      <ng-container *ngIf="leaderboard$ | async as leaderboard; else loadingTable">
+        <div class="table-shell">
+          <table class="table protocol-table leaderboard-table">
+            <thead><tr><th>Rank</th><th>Account</th><th>P&amp;L</th><th>Average return</th><th>Trades</th><th>Record</th><th>Last trade</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let entry of leaderboard.items">
+                <td class="rank">#{{ entry.rank }}</td>
+                <td><a [routerLink]="['/protocol/account' | relativeUrl, entry.owner_script_hash]" [title]="entry.owner_script_hash">{{ shortHash(entry.owner_script_hash) }}</a></td>
+                <td [class.positive]="+entry.pnl_sats > 0" [class.negative]="+entry.pnl_sats < 0">{{ formatSats(entry.pnl_sats) }} sats</td>
+                <td [class.positive]="+entry.average_return_bps > 0" [class.negative]="+entry.average_return_bps < 0">{{ formatReturn(entry.average_return_bps) }}</td>
+                <td>{{ entry.trade_count }}</td>
+                <td>{{ entry.wins }}W / {{ entry.losses }}L</td>
+                <td><a [routerLink]="['/block' | relativeUrl, entry.last_trade_height]">#{{ entry.last_trade_height | number }}</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+    </section>
+
+    <section id="operations" class="protocol-section">
+      <div class="section-heading">
+        <div>
+          <span class="section-kicker">On-chain activity</span>
+          <h2>Recent operations</h2>
+        </div>
+        <span class="count-label">Newest first</span>
+      </div>
+      <ng-container *ngIf="operations$ | async as operations; else loadingTable">
+        <div class="operations-list">
+          <article *ngFor="let operation of operations.items" class="operation-row">
+            <div class="operation-icon">{{ operation.op.slice(0, 1) | uppercase }}</div>
+            <div class="operation-main">
+              <strong>{{ operation.op.replace('_', ' ') | titlecase }}</strong>
+              <span *ngIf="operation.position_id">Position {{ shortHash(operation.position_id, 7, 4) }}</span>
+              <span *ngIf="!operation.position_id">Protocol event</span>
+            </div>
+            <span class="state-badge" [class.state-active]="operation.status === 'valid'">{{ operation.status }}</span>
+            <a *ngIf="operation.txid" [routerLink]="['/tx' | relativeUrl, operation.txid]">{{ shortHash(operation.txid) }}</a>
+            <span *ngIf="!operation.txid" class="muted">synthetic event</span>
+            <a [routerLink]="['/block' | relativeUrl, operation.block_height]">#{{ operation.block_height | number }}</a>
+          </article>
+        </div>
+      </ng-container>
+    </section>
+
+    <section class="methodology">
+      <div>
+        <span class="section-kicker">Verification model</span>
+        <h2>Bitcoin is the source of truth.</h2>
+      </div>
+      <p>Pumpologia data shown here comes from the production Pumpologia indexer. Each on-chain operation links back to its Bitcoin transaction and block. The public gateway is read-only; simulation and administrative indexer endpoints are intentionally not exposed.</p>
+      <a href="/api/pumpologia/v1/health" target="_blank" rel="noopener">Check API health ↗</a>
+    </section>
+  </ng-container>
+</div>
+
+<ng-template #detailView>
+  <section class="detail-panel">
+    <ng-container *ngIf="detail$ | async as detail; else detailUnavailable">
+      <div class="detail-grid">
+        <ng-container *ngFor="let entry of objectEntries(detail)">
+          <div *ngIf="isPrimitive(entry.value)" class="detail-field">
+            <span>{{ entry.key.replace('_', ' ') }}</span>
+            <strong>{{ entry.value === null ? '—' : entry.value }}</strong>
+          </div>
+        </ng-container>
+      </div>
+      <details>
+        <summary>Complete indexed record</summary>
+        <pre>{{ detail | json }}</pre>
+      </details>
+    </ng-container>
+  </section>
+</ng-template>
+
+<ng-template #detailUnavailable>
+  <div class="protocol-alert">This indexed record could not be loaded or does not exist.</div>
+</ng-template>
+
+<ng-template #loadingSummary>
+  <div class="loading-panel" role="status">Loading Pumpologia indexer checkpoint…</div>
+</ng-template>
+
+<ng-template #loadingTable>
+  <div class="loading-panel" role="status">Loading indexed protocol data…</div>
+</ng-template>

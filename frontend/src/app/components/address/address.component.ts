@@ -13,7 +13,7 @@ import { SeoService } from '@app/services/seo.service';
 import { seoDescriptionNetwork } from '@app/shared/common.utils';
 import { AddressInformation } from '@interfaces/node-api.interface';
 import { AddressTypeInfo } from '@app/shared/address-utils';
-import { extractTapLeaves, fillTapTree, convertTextToBuffer, PsbtKeyValue } from '@app/shared/transaction.utils';
+import { addressToScriptPubKey, extractTapLeaves, fillTapTree, convertTextToBuffer, PsbtKeyValue } from '@app/shared/transaction.utils';
 
 class AddressStats implements ChainStats {
   address: string;
@@ -128,6 +128,7 @@ export class AddressComponent implements OnInit, OnDestroy {
   psbtError?: string;
   accelerationsSubscription: Subscription;
   acceleratedTxids: Set<string> | null = null;
+  pumpologiaOwnerScriptHash?: string;
 
   fullyLoaded = false;
   chainStats: AddressStats;
@@ -205,6 +206,7 @@ export class AddressComponent implements OnInit, OnDestroy {
           this.seoService.setDescription($localize`:@@meta.description.bitcoin.address:See mempool transactions, confirmed transactions, balance, and more for ${this.stateService.network==='liquid'||this.stateService.network==='liquidtestnet'?'Liquid':'Bitcoin'}${seoDescriptionNetwork(this.stateService.network)} address ${this.addressString}:INTERPOLATION:.`);
 
           this.addressTypeInfo = new AddressTypeInfo(this.stateService.network || 'mainnet', this.addressString);
+          this.updatePumpologiaOwnerScriptHash();
 
           return merge(
             of(true),
@@ -373,6 +375,21 @@ export class AddressComponent implements OnInit, OnDestroy {
         }
         this.chainStats.addTx(transaction);
       });
+  }
+
+  private updatePumpologiaOwnerScriptHash(): void {
+    this.pumpologiaOwnerScriptHash = undefined;
+    if (this.network !== '' || !window.crypto?.subtle) {
+      return;
+    }
+    const scriptPubKey = addressToScriptPubKey(this.addressString, 'mainnet').scriptPubKey;
+    if (!scriptPubKey || !/^[a-f0-9]+$/i.test(scriptPubKey) || scriptPubKey.length % 2 !== 0) {
+      return;
+    }
+    const bytes = Uint8Array.from(scriptPubKey.match(/.{2}/g) || [], byte => parseInt(byte, 16));
+    window.crypto.subtle.digest('SHA-256', bytes).then(hash => {
+      this.pumpologiaOwnerScriptHash = Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
+    }).catch(() => undefined);
   }
 
   addTransaction(transaction: Transaction, playSound: boolean = true): boolean {

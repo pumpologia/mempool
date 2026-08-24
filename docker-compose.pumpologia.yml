@@ -40,8 +40,8 @@ services:
         backend: ./backend
         rustgbt: ./rust
       args:
-        commitHash: pumpologia-core-verbosity3
-    image: pumpologia/mempool-backend:core-verbosity3
+        commitHash: ${MEMPOOL_GIT_COMMIT:-pumpologia-explorer}
+    image: pumpologia/mempool-backend:${MEMPOOL_BACKEND_IMAGE_TAG:-pumpologia-explorer-latest}
     container_name: pumpologia-mempool-api
     restart: unless-stopped
     network_mode: host
@@ -51,7 +51,7 @@ services:
     environment:
       MEMPOOL_NETWORK: mainnet
       MEMPOOL_BACKEND: electrum
-      MEMPOOL_HTTP_PORT: "8999"
+      BACKEND_HTTP_PORT: "8999"
       MEMPOOL_POLL_RATE_MS: "2000"
       MEMPOOL_AUTOMATIC_POOLS_UPDATE: "true"
       CORE_RPC_HOST: 127.0.0.1
@@ -70,6 +70,8 @@ services:
       DATABASE_PASSWORD: ${MEMPOOL_DB_PASSWORD}
       STATISTICS_ENABLED: "true"
       MAXMIND_ENABLED: "false"
+      PUMPOLOGIA_INDEXER_ENABLED: "true"
+      PUMPOLOGIA_INDEXER_URL: http://127.0.0.1:8088
     volumes:
       - /var/lib/bitcoin:/bitcoin:ro
       - /var/lib/pumpologia/mempool/cache:/backend/cache
@@ -87,7 +89,12 @@ services:
     logging: *default-logging
 
   web:
-    image: mempool/frontend:latest
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile.pumpologia
+      args:
+        commitHash: ${MEMPOOL_GIT_COMMIT:-pumpologia-explorer}
+    image: pumpologia/mempool-frontend:${MEMPOOL_FRONTEND_IMAGE_TAG:-pumpologia-explorer-latest}
     container_name: pumpologia-mempool-web
     restart: unless-stopped
     user: "1000:1000"
@@ -95,6 +102,12 @@ services:
       FRONTEND_HTTP_PORT: "8080"
       BACKEND_MAINNET_HTTP_HOST: host.docker.internal
       BACKEND_MAINNET_HTTP_PORT: "8999"
+      MEMPOOL_WEBSITE_URL: https://pumpologia.app
+      SERVICES_API: https://pumpologia.app/api/v1/services
+      CUSTOMIZATION: custom-pumpologia-config.json
+      ITEMS_PER_PAGE: "25"
+      ACCELERATOR: "false"
+      ACCELERATOR_BUTTON: "false"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

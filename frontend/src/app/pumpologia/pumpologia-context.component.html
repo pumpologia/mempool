@@ -1,0 +1,37 @@
+<section *ngIf="operations.length || account" class="pumpologia-context" aria-labelledby="pumpologia-context-title">
+  <div class="context-heading">
+    <div>
+      <span class="context-kicker">Pumpologia protocol</span>
+      <h2 id="pumpologia-context-title">
+        {{ ownerScriptHash ? 'Protocol account' : (txid ? 'Indexed operation' : (operations.length + ' indexed operation' + (operations.length === 1 ? '' : 's'))) }}
+      </h2>
+    </div>
+    <a [routerLink]="['/protocol']">Open protocol explorer →</a>
+  </div>
+
+  <div class="context-operations">
+    <article *ngFor="let tokenAccount of account?.accounts">
+      <div class="operation-mark">{{ (tokenAccount.tick_canonical || 'P').slice(0, 1) | uppercase }}</div>
+      <div class="operation-name">
+        <strong>{{ tokenAccount.tick_canonical | uppercase }} balance</strong>
+        <span>{{ formatAtoms(tokenAccount.balance_atoms) }} total · {{ formatAtoms(tokenAccount.locked_atoms) }} locked</span>
+      </div>
+      <a [routerLink]="['/protocol/account', account?.owner_script_hash]">Account detail</a>
+    </article>
+    <article *ngFor="let operation of operations">
+      <div class="operation-mark">{{ operation.op.slice(0, 1) | uppercase }}</div>
+      <div class="operation-name">
+        <strong>{{ operation.op.replace('_', ' ') | titlecase }}</strong>
+        <span>{{ operation.tick_canonical ? (operation.tick_canonical | uppercase) : 'Protocol event' }}</span>
+      </div>
+      <span class="context-state" [class.valid]="operation.status === 'valid'">{{ operation.status }}</span>
+      <a *ngIf="operation.position_id" [routerLink]="['/protocol/position', operation.position_id]">
+        Position {{ shortHash(operation.position_id) }}
+      </a>
+      <a *ngIf="!txid && operation.txid" [routerLink]="['/tx', operation.txid]">
+        Tx {{ shortHash(operation.txid) }}
+      </a>
+      <a [routerLink]="['/protocol/operation', operation.txid]">Indexed record</a>
+    </article>
+  </div>
+</section>

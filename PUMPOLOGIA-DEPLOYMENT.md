@@ -4,8 +4,8 @@ This fork adds a production-oriented deployment for a self-hosted Mempool explor
 
 ## Architecture
 
-- `pumpologia-mempool-web`: official Mempool frontend, reachable locally on `127.0.0.1:8082` and from the existing `pumpologia_default` Docker network on port `8080`.
-- `pumpologia-mempool-api`: backend built from this fork on host port `8999` so it can use the existing loopback-only Bitcoin Core RPC and Electrs services. The Pumpologia patch consumes Bitcoin Core `getblock` verbosity-3 prevouts and retrieves confirmed transactions through Electrs while Core's transaction index catches up.
+- `pumpologia-mempool-web`: Pumpologia-branded Angular frontend built from this fork, reachable locally on `127.0.0.1:8082` and from the existing `pumpologia_default` Docker network on port `8080`.
+- `pumpologia-mempool-api`: backend built from this fork on host port `8999` so it can use the existing loopback-only Bitcoin Core RPC, Electrs and the Pumpologia indexer. Its `/api/pumpologia/v1/*` gateway is read-only, validates public inputs and never exposes simulation or administrative endpoints.
 - `pumpologia-mempool-db`: isolated MariaDB on `127.0.0.1:3307`.
 - Bitcoin Core: existing mainnet node at `127.0.0.1:8332`, authenticated through the read-only mounted cookie.
 - Electrs: existing mainnet server at `127.0.0.1:50001`, without TLS because traffic stays on the host.
@@ -34,16 +34,8 @@ bitcoin-cli -conf=/etc/bitcoin/bitcoin.conf -datadir=/var/lib/bitcoin getindexin
 
 ```sh
 cd /root/pumpologia/mempool
-
-docker compose \
-  -f docker-compose.pumpologia.yml \
-  --env-file .env.pumpologia \
-  config --quiet
-
-docker compose \
-  -f docker-compose.pumpologia.yml \
-  --env-file .env.pumpologia \
-  up -d
+make -f Makefile.pumpologia check
+make -f Makefile.pumpologia up
 
 docker compose \
   -f docker-compose.pumpologia.yml \
@@ -52,6 +44,7 @@ docker compose \
 
 curl --fail http://127.0.0.1:8999/api/v1/backend-info
 curl --fail http://127.0.0.1:8082/api/blocks/tip/height
+curl --fail http://127.0.0.1:8082/api/pumpologia/v1/summary
 curl --fail http://127.0.0.1:8082/
 ```
 
@@ -81,11 +74,18 @@ git merge --ff-only upstream/master
 git push origin master
 ```
 
-Re-run the compose pull/up commands after reviewing upstream release notes. Production should eventually replace `latest` with tested image digests.
+`Makefile.pumpologia` sets `MEMPOOL_GIT_COMMIT`, `MEMPOOL_BACKEND_IMAGE_TAG`
+and `MEMPOOL_FRONTEND_IMAGE_TAG` from the committed revision. Never publish an
+image whose embedded revision describes an uncommitted worktree.
 
-## Cloudflare exposure: recommended hostname
+## Cloudflare exposure and canonical hostname
 
-Recommended public URL: `https://mempool.pumpologia.app`.
+Canonical public URL: `https://pumpologia.app`.
+
+- `https://www.pumpologia.app/*` returns `308` to the same path and query on the apex.
+- `https://mempool.pumpologia.app/*` returns `308` to the same path and query on the apex.
+- Requests to `/api/*` on the legacy mempool hostname return `410`, preventing a
+  non-idempotent request from being replayed against the canonical origin.
 
 The existing Pumpologia tunnel ID is:
 
@@ -104,14 +104,14 @@ Both the tunnel route and DNS record are required.
 ### Cloudflare dashboard
 
 1. Open **Zero Trust → Networks → Tunnels → `pumpologia-production`**.
-2. Add a public hostname / published application:
-   - hostname: `mempool.pumpologia.app`
+2. Add three public hostnames / published applications:
+   - hostnames: `pumpologia.app`, `www.pumpologia.app`, `mempool.pumpologia.app`
    - service type: `HTTP`
    - origin URL: `http://pumpologia-mempool-web:8080`
    - no Cloudflare Access policy if the explorer should be public.
-3. In the `pumpologia.app` DNS zone, create or verify:
+3. In the `pumpologia.app` DNS zone, create or verify each hostname:
    - type: `CNAME`
-   - name: `mempool`
+   - names: `@`, `www`, `mempool`
    - target: `9a6f7864-5019-41fa-977d-6ab650ee0085.cfargotunnel.com`
    - proxy status: **Proxied**
    - TTL: **Auto**
@@ -125,16 +125,21 @@ The `pumpologia.app` zone and `pumpologia-production` tunnel are in the same Clo
 - tunnel configuration version: `17`
 - origin: `http://pumpologia-mempool-web:8080`
 
-The route was added through the Cloudflare API. Before the next Terraform apply against the existing tunnel module, represent this public hostname in infrastructure-as-code; that module owns and rewrites the complete ingress list.
+The production Terraform module supports these as `public_tunnel_routes`; it
+owns both DNS and the complete tunnel ingress list. Existing live records must
+be imported before the first apply.
 
 No public A/AAAA record to the VPS, no port opening, and no Certbot certificate are required. Cloudflare terminates public TLS and sends HTTP through the encrypted tunnel. This is especially important for the `.app` TLD, whose browsers require HTTPS.
 
 ### Verification
 
 ```sh
-dig +short CNAME mempool.pumpologia.app
-curl -I https://mempool.pumpologia.app/
-curl --fail https://mempool.pumpologia.app/api/v1/blocks/tip/height
+dig +short CNAME pumpologia.app
+curl --fail https://pumpologia.app/
+curl --fail https://pumpologia.app/api/v1/blocks/tip/height
+curl --fail https://pumpologia.app/api/pumpologia/v1/summary
+curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' https://www.pumpologia.app/protocol
+curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' https://mempool.pumpologia.app/tx/0000000000000000000000000000000000000000000000000000000000000000
 ```
 
 Expected CNAME target:
@@ -156,9 +161,15 @@ The API tip should match the local Bitcoin node within normal synchronization de
 
 ## Rollback
 
-1. Remove or disable only the `mempool.pumpologia.app` tunnel route.
-2. Remove its CNAME.
-3. Run the stack-specific `docker compose ... down` command.
-4. Keep `/var/lib/pumpologia/mempool` until a separate retention decision.
+The root-only pre-cutover bundle under `/var/backups/pumpologia-explorer/`
+contains the previous container/image metadata, resolved Compose file, live
+configuration and Cloudflare DNS/tunnel/settings JSON with checksums.
+
+1. Restore the backed-up tunnel configuration and DNS/settings JSON through the
+   Cloudflare API.
+2. Retag the previous frontend/backend image IDs recorded in the bundle.
+3. Recreate only `api` and `web` with the previous image tags; keep MariaDB and
+   `/var/lib/pumpologia/mempool` untouched.
+4. Verify the legacy hostname, Bitcoin tip and backend health before announcing rollback.
 
 The existing Pumpologia frontend, admin, logs, Bitcoin Core, Electrs and Cloudflare routes remain untouched.

@@ -192,8 +192,13 @@ main {
   }
 }
 
-:focus {
-  outline: none !important;
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--orange) !important;
+  outline-offset: 3px;
 }
 
 .box {

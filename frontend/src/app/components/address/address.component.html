@@ -16,6 +16,8 @@
 
   <div class="clearfix"></div>
 
+  <app-pumpologia-context *ngIf="network === '' && pumpologiaOwnerScriptHash" [ownerScriptHash]="pumpologiaOwnerScriptHash"></app-pumpologia-context>
+
   <ng-template [ngIf]="!isLoadingAddress && !error">
     <div class="box">
 

@@ -26,6 +26,7 @@ import { AddressComponent } from '@components/address/address.component';
 import { WalletComponent } from '@components/wallet/wallet.component';
 import { CalculatorComponent } from '@components/calculator/calculator.component';
 import { BlockGogglesGraphComponent } from '@components/block-goggles-graph/block-goggles-graph.component';
+import { PumpologiaExplorerComponent } from '@app/pumpologia/pumpologia-explorer.component';
 
 const browserWindow = window || {};
 // @ts-ignore
@@ -36,6 +37,23 @@ const routes: Routes = [
   {
     path: '',
     children: [
+      {
+        path: 'protocol',
+        component: StartComponent,
+        children: [
+          { path: '', component: PumpologiaExplorerComponent, data: { kind: 'overview' } },
+          { path: 'tokens', component: PumpologiaExplorerComponent, data: { kind: 'overview', section: 'tokens' } },
+          { path: 'positions', component: PumpologiaExplorerComponent, data: { kind: 'overview', section: 'positions' } },
+          { path: 'leaderboard', component: PumpologiaExplorerComponent, data: { kind: 'overview', section: 'leaderboard' } },
+          { path: 'activity', component: PumpologiaExplorerComponent, data: { kind: 'overview', section: 'operations' } },
+          { path: 'token/:tokenId', component: PumpologiaExplorerComponent, data: { kind: 'token' } },
+          { path: 'ticker/:tick', component: PumpologiaExplorerComponent, data: { kind: 'ticker' } },
+          { path: 'position/:positionId', component: PumpologiaExplorerComponent, data: { kind: 'position' } },
+          { path: 'account/:ownerScriptHash', component: PumpologiaExplorerComponent, data: { kind: 'account' } },
+          { path: 'operation/:txid', component: PumpologiaExplorerComponent, data: { kind: 'operation' } },
+          { path: 'oracle/:height', component: PumpologiaExplorerComponent, data: { kind: 'oracle' } },
+        ],
+      },
       {
         path: 'tools/calculator',
         component: CalculatorComponent

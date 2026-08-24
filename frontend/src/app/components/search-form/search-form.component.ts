@@ -265,7 +265,14 @@ export class SearchFormComponent implements OnInit {
     if (searchText) {
       this.isSearching = true;
 
-      if (!this.regexTransaction.test(searchText) && this.regexAddress.test(searchText)) {
+      const positionMatch = searchText.match(/^([a-f0-9]{64}:\d+)$/i);
+      const tickerMatch = searchText.match(/^(?:ticker:|\$)([a-z0-9]{1,32})$/i);
+
+      if (positionMatch) {
+        this.navigatePumpologia('/protocol/position', positionMatch[1]);
+      } else if (tickerMatch) {
+        this.navigatePumpologia('/protocol/ticker', tickerMatch[1].toLowerCase());
+      } else if (!this.regexTransaction.test(searchText) && this.regexAddress.test(searchText)) {
         this.navigate('/address/', searchText);
       } else if (this.regexBlockhash.test(searchText)) {
         this.navigate('/block/', searchText);
@@ -311,6 +318,13 @@ export class SearchFormComponent implements OnInit {
         this.isSearching = false;
       }
     }
+  }
+
+  private navigatePumpologia(url: string, identifier: string): void {
+    this.router.navigate([url, identifier]);
+    this.searchTriggered.emit();
+    this.searchForm.setValue({ searchText: '' });
+    this.isSearching = false;
   }
 
 

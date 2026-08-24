@@ -1,0 +1,12 @@
+{
+  "theme": "pumpologia",
+  "enterprise": "pumpologia",
+  "branding": {
+    "name": "pumpologia",
+    "title": "Pumpologia",
+    "site_id": 1,
+    "cobranded": false,
+    "header_img": "/resources/pumpologia/pumpologia-logo.png",
+    "footer_img": "/resources/pumpologia/pumpologia-logo.png"
+  }
+}

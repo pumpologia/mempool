@@ -126,6 +126,7 @@ export class ThemeService {
       case 'bukele':
         return contrastMempoolFeeColors;
       case 'nymkappa':
+      case 'pumpologia':
         return lightMempoolFeeColors;
       default:
         return defaultMempoolFeeColors;

@@ -48,6 +48,9 @@ import { ActiveAccelerationBox } from '@components/acceleration/active-accelerat
 import { AddressesTreemap } from '@components/addresses-treemap/addresses-treemap.component';
 import { TaprootAddressScriptsModule } from '@components/taproot-address-scripts/taproot-address-scripts.module';
 import { CommonModule } from '@angular/common';
+import { PumpologiaSummaryComponent } from '@app/pumpologia/pumpologia-summary.component';
+import { PumpologiaExplorerComponent } from '@app/pumpologia/pumpologia-explorer.component';
+import { PumpologiaContextComponent } from '@app/pumpologia/pumpologia-context.component';
 
 @NgModule({
   declarations: [
@@ -95,12 +98,15 @@ import { CommonModule } from '@angular/common';
     UtxoGraphComponent,
     ActiveAccelerationBox,
     AddressesTreemap,
+    PumpologiaSummaryComponent,
+    PumpologiaExplorerComponent,
   ],
   imports: [
     CommonModule,
     SharedModule,
     TaprootAddressScriptsModule,
     GraphsRoutingModule,
+    PumpologiaContextComponent,
     NgxEchartsModule.forRoot({
       echarts: () => import('@app/graphs/echarts').then(m => m.echarts),
     })

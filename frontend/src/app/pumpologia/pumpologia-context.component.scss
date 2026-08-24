@@ -1,0 +1,121 @@
+:host {
+  display: block;
+}
+
+.pumpologia-context {
+  background: linear-gradient(135deg, rgba(255, 224, 194, 0.92), rgba(255, 248, 238, 0.98));
+  border: 1px solid rgba(239, 111, 32, 0.32);
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(125, 54, 10, 0.09);
+  margin: 1rem 0 1.5rem;
+  overflow: hidden;
+  padding: 1.25rem;
+}
+
+.context-heading,
+.context-operations article {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.context-heading h2 {
+  color: #21160f;
+  font-size: 1.35rem;
+  margin: 0.2rem 0 0;
+}
+
+.context-kicker {
+  color: #b94708;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.context-heading a,
+.context-operations a {
+  color: #9c3900;
+  font-weight: 700;
+}
+
+.context-operations {
+  border-top: 1px solid rgba(123, 63, 27, 0.14);
+  margin-top: 1rem;
+  padding-top: 0.4rem;
+}
+
+.context-operations article {
+  border-bottom: 1px solid rgba(123, 63, 27, 0.1);
+  justify-content: flex-start;
+  min-width: 0;
+  padding: 0.75rem 0;
+}
+
+.context-operations article:last-child {
+  border-bottom: 0;
+}
+
+.operation-mark {
+  align-items: center;
+  background: #ef6f20;
+  border-radius: 10px;
+  color: #fff;
+  display: flex;
+  flex: 0 0 2.25rem;
+  font-weight: 900;
+  height: 2.25rem;
+  justify-content: center;
+}
+
+.operation-name {
+  display: flex;
+  flex: 1 1 12rem;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.operation-name strong {
+  color: #21160f;
+}
+
+.operation-name span {
+  color: #76523c;
+  font-size: 0.78rem;
+}
+
+.context-state {
+  background: rgba(74, 65, 59, 0.1);
+  border-radius: 999px;
+  color: #5e4c41;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.25rem 0.55rem;
+  text-transform: uppercase;
+}
+
+.context-state.valid {
+  background: rgba(23, 129, 83, 0.12);
+  color: #0c7447;
+}
+
+@media (max-width: 767px) {
+  .context-heading,
+  .context-operations article {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .context-heading a {
+    font-size: 0.85rem;
+  }
+
+  .operation-name {
+    flex-basis: calc(100% - 3.5rem);
+  }
+
+  .context-state {
+    margin-left: 3.25rem;
+  }
+}

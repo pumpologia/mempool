@@ -62,7 +62,7 @@ export class EnterpriseService {
 
   private processEnterpriseInfo(info: any): any {
     const isCustomDashboard = this.stateService.env.customize?.dashboard?.widgets?.length > 0;
-    const dualLogo = !isCustomDashboard || info.cobranded;
+    const dualLogo = info.cobranded === false ? false : (!isCustomDashboard || info.cobranded);
     const logoUrl = info.header_img ?? info.img ?? `/api/v1/services/enterprise/images/${this.subdomain}/logo`;
     return {
       ...info,

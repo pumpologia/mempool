@@ -1,0 +1,44 @@
+<section class="pumpologia-summary" aria-labelledby="pumpologia-summary-title">
+  <div class="summary-heading">
+    <div>
+      <div class="eyebrow">Native Bitcoin protocol</div>
+      <h1 id="pumpologia-summary-title">Bitcoin, interpreted through Pumpologia.</h1>
+      <p>Track protocol operations, positions and token supply alongside the Bitcoin chain that secures them.</p>
+    </div>
+    <a class="btn btn-primary protocol-button" [routerLink]="['/protocol' | relativeUrl]">
+      Explore protocol
+      <span aria-hidden="true">→</span>
+    </a>
+  </div>
+
+  <ng-container *ngIf="summary$ | async as summary; else summaryUnavailable">
+    <div class="metric-grid">
+      <a class="metric" [routerLink]="['/block' | relativeUrl, summary.sync.checkpoint_hash]">
+        <span class="metric-label">Indexed block</span>
+        <strong>{{ summary.sync.checkpoint_height | number }}</strong>
+        <span class="metric-note">Pumpologia v1 checkpoint</span>
+      </a>
+      <a class="metric" [routerLink]="['/protocol' | relativeUrl]" [queryParams]="{state: 'OPEN'}">
+        <span class="metric-label">Open positions</span>
+        <strong>{{ getOpenPositions(summary) | number }}</strong>
+        <span class="metric-note">{{ summary.position_counts.total | number }} total positions</span>
+      </a>
+      <a class="metric" [routerLink]="['/protocol' | relativeUrl]" fragment="tokens">
+        <span class="metric-label">PAPER net supply</span>
+        <strong>{{ getSupply(summary) }}</strong>
+        <span class="metric-note">Protocol-indexed units</span>
+      </a>
+      <a class="metric" [routerLink]="['/protocol' | relativeUrl]" fragment="operations">
+        <span class="metric-label">Valid operations</span>
+        <strong>{{ summary.sync.operation_count | number }}</strong>
+        <span class="metric-note">Deterministically interpreted</span>
+      </a>
+    </div>
+  </ng-container>
+</section>
+
+<ng-template #summaryUnavailable>
+  <div class="summary-unavailable" role="status">
+    Protocol data is temporarily unavailable. Bitcoin explorer features remain operational.
+  </div>
+</ng-template>

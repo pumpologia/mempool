@@ -1,0 +1,27 @@
+SHELL := /bin/sh
+
+COMPOSE := docker compose -f docker-compose.pumpologia.yml --env-file .env.pumpologia
+REVISION := $(shell git rev-parse --verify HEAD)
+RELEASE_TAG := pumpologia-explorer-$(shell git rev-parse --short=12 HEAD)
+
+export MEMPOOL_GIT_COMMIT := $(REVISION)
+export MEMPOOL_BACKEND_IMAGE_TAG := $(RELEASE_TAG)
+export MEMPOOL_FRONTEND_IMAGE_TAG := $(RELEASE_TAG)
+
+.PHONY: check build up ps smoke
+
+check:
+	@test -s .env.pumpologia
+	@$(COMPOSE) config --quiet
+
+build: check
+	$(COMPOSE) build api web
+
+up: check
+	$(COMPOSE) up -d --build
+
+ps:
+	$(COMPOSE) ps
+
+smoke:
+	./scripts/pumpologia-smoke.sh $${PUMPOLOGIA_EXPLORER_URL:-https://pumpologia.app}
