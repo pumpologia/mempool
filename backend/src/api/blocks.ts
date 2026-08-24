@@ -153,7 +153,7 @@ class Blocks {
     }
 
     // Fetch remaining txs in bulk
-    if ((isEsplora && (txIds.length - totalFound > 500)) || stale) {
+    if (!isEsplora || (txIds.length - totalFound > 500) || stale) {
       try {
         const rawTransactions = await bitcoinApi.$getTxsForBlock(blockHash, stale);
         for (const tx of rawTransactions) {

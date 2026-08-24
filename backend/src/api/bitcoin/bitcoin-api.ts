@@ -114,7 +114,7 @@ class BitcoinApi implements AbstractBitcoinApi {
 
   /** @asyncUnsafe */
   async $getTxsForBlock(hash: string, fallbackToCore = false): Promise<IEsploraApi.Transaction[]> {
-    const verboseBlock: IBitcoinApi.VerboseBlock = await this.bitcoindClient.getBlock(hash, 2);
+    const verboseBlock: IBitcoinApi.VerboseBlock = await this.bitcoindClient.getBlock(hash, 3);
     const transactions: IEsploraApi.Transaction[] = [];
     for (const tx of verboseBlock.tx) {
       const converted = await this.$convertTransaction(tx, true, false, verboseBlock.confirmations === -1);
@@ -317,7 +317,17 @@ class BitcoinApi implements AbstractBitcoinApi {
     esploraTransaction.vin = transaction.vin.map((vin) => {
       return {
         is_coinbase: !!vin.coinbase,
-        prevout: null,
+        prevout: vin.prevout ? {
+          value: Math.round(vin.prevout.value * 100000000),
+          scriptpubkey: vin.prevout.scriptPubKey.hex,
+          scriptpubkey_address: vin.prevout.scriptPubKey?.address
+            || vin.prevout.scriptPubKey?.addresses?.[0]
+            || '',
+          scriptpubkey_asm: vin.prevout.scriptPubKey?.hex
+            ? transactionUtils.convertScriptSigAsm(vin.prevout.scriptPubKey.hex)
+            : '',
+          scriptpubkey_type: this.translateScriptPubKeyType(vin.prevout.scriptPubKey.type),
+        } : null,
         scriptsig: vin.scriptSig && vin.scriptSig.hex || vin.coinbase || '',
         scriptsig_asm: vin.scriptSig ? transactionUtils.convertScriptSigAsm(vin.scriptSig.hex) : (vin.coinbase ? transactionUtils.convertScriptSigAsm(vin.coinbase) : ''),
         sequence: vin.sequence,
@@ -443,6 +453,12 @@ class BitcoinApi implements AbstractBitcoinApi {
     for (let i = 0; i < transaction.vin.length; i++) {
       if (lazyPrevouts && i > 12) {
         transaction.vin[i].lazy = true;
+        continue;
+      }
+      const prevout = transaction.vin[i].prevout;
+      if (prevout) {
+        totalIn += prevout.value;
+        transactionUtils.addInnerScriptsToVin(transaction.vin[i]);
         continue;
       }
       const innerTx = await this.$getRawTransaction(transaction.vin[i].txid, false, false);

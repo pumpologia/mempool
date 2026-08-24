@@ -1,0 +1,123 @@
+name: pumpologia-mempool
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 20m
+    max-file: "5"
+
+services:
+  db:
+    image: mariadb:10.5.21
+    container_name: pumpologia-mempool-db
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      MYSQL_DATABASE: mempool
+      MYSQL_USER: mempool
+      MYSQL_PASSWORD: ${MEMPOOL_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MEMPOOL_DB_ROOT_PASSWORD}
+      MARIADB_AUTO_UPGRADE: "1"
+    volumes:
+      - /var/lib/pumpologia/mempool/mysql:/var/lib/mysql
+    ports:
+      - "127.0.0.1:3307:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u mempool -p$$MYSQL_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  api:
+    build:
+      context: ./docker/backend
+      dockerfile: Dockerfile
+      additional_contexts:
+        backend: ./backend
+        rustgbt: ./rust
+      args:
+        commitHash: pumpologia-core-verbosity3
+    image: pumpologia/mempool-backend:core-verbosity3
+    container_name: pumpologia-mempool-api
+    restart: unless-stopped
+    network_mode: host
+    user: "1000:1000"
+    group_add:
+      - "987"
+    environment:
+      MEMPOOL_NETWORK: mainnet
+      MEMPOOL_BACKEND: electrum
+      MEMPOOL_HTTP_PORT: "8999"
+      MEMPOOL_POLL_RATE_MS: "2000"
+      MEMPOOL_AUTOMATIC_POOLS_UPDATE: "true"
+      CORE_RPC_HOST: 127.0.0.1
+      CORE_RPC_PORT: "8332"
+      CORE_RPC_COOKIE: "true"
+      CORE_RPC_COOKIE_PATH: /bitcoin/.cookie
+      CORE_RPC_TIMEOUT: "60000"
+      ELECTRUM_HOST: 127.0.0.1
+      ELECTRUM_PORT: "50001"
+      ELECTRUM_TLS_ENABLED: "false"
+      DATABASE_ENABLED: "true"
+      DATABASE_HOST: 127.0.0.1
+      DATABASE_PORT: "3307"
+      DATABASE_DATABASE: mempool
+      DATABASE_USERNAME: mempool
+      DATABASE_PASSWORD: ${MEMPOOL_DB_PASSWORD}
+      STATISTICS_ENABLED: "true"
+      MAXMIND_ENABLED: "false"
+    volumes:
+      - /var/lib/bitcoin:/bitcoin:ro
+      - /var/lib/pumpologia/mempool/cache:/backend/cache
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8999/api/v1/backend-info >/dev/null"]
+      interval: 20s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+  web:
+    image: mempool/frontend:latest
+    container_name: pumpologia-mempool-web
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      FRONTEND_HTTP_PORT: "8080"
+      BACKEND_MAINNET_HTTP_HOST: host.docker.internal
+      BACKEND_MAINNET_HTTP_PORT: "8999"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:8082:8080"
+    networks:
+      - default
+      - pumpologia
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/ | grep -q '<html'"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+
+networks:
+  pumpologia:
+    external: true
+    name: pumpologia_default

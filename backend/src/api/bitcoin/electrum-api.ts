@@ -2,6 +2,7 @@ import config from '../../config';
 import Client from '@mempool/electrum-client';
 import { AbstractBitcoinApi } from './bitcoin-api-abstract-factory';
 import { IEsploraApi } from './esplora-api.interface';
+import { IBitcoinApi } from './bitcoin-api.interface';
 import { IElectrumApi } from './electrum-api.interface';
 import BitcoinApi from './bitcoin-api';
 import logger from '../../logger';
@@ -38,6 +39,26 @@ class BitcoindElectrsApi extends BitcoinApi implements AbstractBitcoinApi {
       .catch((err) => {
         logger.err(`Error connecting to Electrum Server at ${config.ELECTRUM.HOST}:${config.ELECTRUM.PORT}`);
       });
+  }
+
+  /**
+   * Electrs can return a decoded confirmed transaction directly. Prefer it to
+   * Core so historical transaction and address pages work when txindex is off.
+   * Fall back to the inherited Core path for transient Electrum failures.
+   */
+  async $getRawTransaction(txId: string, skipConversion = false, addPrevout = false, lazyPrevouts = false): Promise<IEsploraApi.Transaction> {
+    try {
+      const transaction = await this.electrumClient.blockchainTransaction_get(txId, true) as IBitcoinApi.Transaction;
+      if (skipConversion) {
+        transaction.vout.forEach((vout) => {
+          vout.value = Math.round(vout.value * 100000000);
+        });
+        return transaction as unknown as IEsploraApi.Transaction;
+      }
+      return this.$convertTransaction(transaction, addPrevout, lazyPrevouts);
+    } catch (e) {
+      return super.$getRawTransaction(txId, skipConversion, addPrevout, lazyPrevouts);
+    }
   }
 
   /** @asyncUnsafe */

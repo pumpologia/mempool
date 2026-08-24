@@ -22,7 +22,7 @@ ENV FD=/build/rust-gbt
 RUN bash meta/scripts/check-install-scripts.sh && npm ci --omit=dev --omit=optional
 
 WORKDIR /build
-RUN npm run package
+RUN npm run package && mkdir -p /build/GeoIP
 
 FROM rust:1.84-bookworm AS runtime
 

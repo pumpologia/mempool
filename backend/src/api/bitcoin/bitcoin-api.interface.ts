@@ -94,6 +94,12 @@ export namespace IBitcoinApi {
     pegin_witness?: string[];        //  (string) Elements peg-in witness
     coinbase?: string;
     is_pegin?: boolean;              //  (boolean) Elements peg-in
+    // Bitcoin Core getblock verbosity=3 includes the spent output for each
+    // non-coinbase input, allowing callers to calculate fees without txindex.
+    prevout?: Vout & {
+      generated: boolean;
+      height: number;
+    };
   }
 
   export interface Vout {
