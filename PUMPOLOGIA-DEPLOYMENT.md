@@ -119,10 +119,13 @@ Both the tunnel route and DNS record are required.
 
 Cloudflare requires the DNS zone and tunnel to belong to the same Cloudflare account. If `pumpologia.app` is in another account, create a tunnel in that account instead of pointing at this tunnel.
 
-The credentials currently installed on this VPS can manage the existing `pumpologia.com` zone and tunnel, but an authoritative API lookup returned zero accessible `pumpologia.app` zones. Public DNS confirms that `pumpologia.app` delegates to Cloudflare (`roman.ns.cloudflare.com` and `tessa.ns.cloudflare.com`), so final publication needs either:
+The `pumpologia.app` zone and `pumpologia-production` tunnel are in the same Cloudflare account. The production route is live with:
 
-- a Cloudflare API token that can edit DNS for the `pumpologia.app` zone and manage the tunnel in the same account; or
-- dashboard access to the account that owns `pumpologia.app`, plus a new tunnel there if it is a different account.
+- DNS record ID: `3863d829e7778769774a6dc0b698361c`
+- tunnel configuration version: `17`
+- origin: `http://pumpologia-mempool-web:8080`
+
+The route was added through the Cloudflare API. Before the next Terraform apply against the existing tunnel module, represent this public hostname in infrastructure-as-code; that module owns and rewrites the complete ingress list.
 
 No public A/AAAA record to the VPS, no port opening, and no Certbot certificate are required. Cloudflare terminates public TLS and sends HTTP through the encrypted tunnel. This is especially important for the `.app` TLD, whose browsers require HTTPS.
 
