@@ -302,3 +302,6 @@ h1 {
     }
   }
 }
+.pumpologia-only > :not(app-pumpologia-context) {
+  display: none !important;
+}

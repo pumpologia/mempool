@@ -1,37 +1,35 @@
-<section *ngIf="operations.length || account" class="pumpologia-context" aria-labelledby="pumpologia-context-title">
+<section *ngIf="operations.length" class="pumpologia-context" aria-labelledby="pumpologia-context-title">
   <div class="context-heading">
     <div>
-      <span class="context-kicker">Pumpologia protocol</span>
-      <h2 id="pumpologia-context-title">
-        {{ ownerScriptHash ? 'Protocol account' : (txid ? 'Indexed operation' : (operations.length + ' indexed operation' + (operations.length === 1 ? '' : 's'))) }}
-      </h2>
+      <span class="context-kicker">Pumpologia position data</span>
+      <h2 id="pumpologia-context-title">{{ txid ? 'Trade in this transaction' : (operations.length + ' trade event' + (operations.length === 1 ? '' : 's') + ' in this block') }}</h2>
     </div>
-    <a [routerLink]="['/protocol']">Open protocol explorer →</a>
+    <a [routerLink]="['/']">Open trading terminal →</a>
   </div>
 
   <div class="context-operations">
-    <article *ngFor="let tokenAccount of account?.accounts">
-      <div class="operation-mark">{{ (tokenAccount.tick_canonical || 'P').slice(0, 1) | uppercase }}</div>
-      <div class="operation-name">
-        <strong>{{ tokenAccount.tick_canonical | uppercase }} balance</strong>
-        <span>{{ formatAtoms(tokenAccount.balance_atoms) }} total · {{ formatAtoms(tokenAccount.locked_atoms) }} locked</span>
-      </div>
-      <a [routerLink]="['/protocol/account', account?.owner_script_hash]">Account detail</a>
-    </article>
     <article *ngFor="let operation of operations">
-      <div class="operation-mark">{{ operation.op.slice(0, 1) | uppercase }}</div>
-      <div class="operation-name">
-        <strong>{{ operation.op.replace('_', ' ') | titlecase }}</strong>
-        <span>{{ operation.tick_canonical ? (operation.tick_canonical | uppercase) : 'Protocol event' }}</span>
+      <div class="trade-head">
+        <div>
+          <span class="side-pill" [class.short]="operation.side === 'short'">{{ operation.side || operation.type }}</span>
+          <strong>{{ operation.market || 'Pumpologia' }} <small>/ USD</small></strong>
+        </div>
+        <span class="context-state" [class.open]="operation.trade_status === 'OPEN'">{{ operation.trade_status }}</span>
       </div>
-      <span class="context-state" [class.valid]="operation.status === 'valid'">{{ operation.status }}</span>
-      <a *ngIf="operation.position_id" [routerLink]="['/protocol/position', operation.position_id]">
-        Position {{ shortHash(operation.position_id) }}
-      </a>
-      <a *ngIf="!txid && operation.txid" [routerLink]="['/tx', operation.txid]">
-        Tx {{ shortHash(operation.txid) }}
-      </a>
-      <a [routerLink]="['/protocol/operation', operation.txid]">Indexed record</a>
+
+      <div class="trade-grid">
+        <div><span>Margin</span><strong>{{ formatSats(operation.margin_sats) }} sats</strong></div>
+        <div><span>Leverage</span><strong>{{ operation.leverage | number }}×</strong></div>
+        <div><span>Notional</span><strong>{{ formatSats(operation.notional_sats) }} sats</strong></div>
+        <div><span>Entry</span><strong>{{ formatUsd(operation.entry_price_usd) }}</strong></div>
+        <div><span>{{ operation.pnl_kind === 'unrealized' ? 'Indicative P&L' : 'Calculated P&L' }}</span><strong [ngClass]="pnlClass(operation.pnl_usd)">{{ formatUsd(operation.pnl_usd) }}</strong></div>
+      </div>
+
+      <div class="trade-links">
+        <a *ngIf="operation.position_id" [routerLink]="['/protocol/position', operation.position_id]">Full position</a>
+        <a *ngIf="!txid && operation.txid" [routerLink]="['/tx', operation.txid]">Opening transaction</a>
+        <a [routerLink]="['/block', operation.block_height]">Block {{ operation.block_height | number }}</a>
+      </div>
     </article>
   </div>
 </section>

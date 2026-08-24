@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, Output } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {
   PumpologiaApiService,
@@ -19,18 +19,9 @@ import { catchError, takeUntil } from 'rxjs/operators';
 export class PumpologiaContextComponent implements OnChanges, OnDestroy {
   @Input() txid?: string;
   @Input() blockHeight?: number;
-  @Input() ownerScriptHash?: string;
+  @Output() matchChange = new EventEmitter<boolean>();
 
   operations: PumpologiaOperation[] = [];
-  account?: {
-    owner_script_hash: string;
-    accounts: Array<{
-      tick_canonical?: string;
-      balance_atoms?: string;
-      available_atoms?: string;
-      locked_atoms?: string;
-    }>;
-  };
   private readonly requestChanged$ = new Subject<void>();
   private readonly destroy$ = new Subject<void>();
 
@@ -42,7 +33,6 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
   ngOnChanges(): void {
     this.requestChanged$.next();
     this.operations = [];
-    this.account = undefined;
 
     if (this.txid && /^[a-f0-9]{64}$/i.test(this.txid)) {
       this.pumpologiaApi.getOperation$(this.txid).pipe(
@@ -50,33 +40,21 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
         takeUntil(this.requestChanged$),
         takeUntil(this.destroy$),
       ).subscribe(operation => {
-        const record = operation as { operations?: PumpologiaOperation[] } | null;
-        this.operations = Array.isArray(record?.operations) ? record.operations : [];
-        this.cd.markForCheck();
-      });
-      return;
-    }
-
-    if (this.ownerScriptHash && /^[a-f0-9]{64}$/i.test(this.ownerScriptHash)) {
-      this.pumpologiaApi.getAccount$(this.ownerScriptHash).pipe(
-        catchError(() => of(null)),
-        takeUntil(this.requestChanged$),
-        takeUntil(this.destroy$),
-      ).subscribe(account => {
-        const typedAccount = account as unknown as typeof this.account;
-        this.account = typedAccount?.accounts?.length ? typedAccount : undefined;
+        this.operations = Array.isArray(operation?.items) ? operation.items : [];
+        this.matchChange.emit(this.operations.length > 0);
         this.cd.markForCheck();
       });
       return;
     }
 
     if (Number.isSafeInteger(this.blockHeight) && (this.blockHeight as number) >= 0) {
-      this.pumpologiaApi.getOperations$(100, undefined, { block_height: this.blockHeight as number }).pipe(
+      this.pumpologiaApi.getOperations$(25, { block_height: this.blockHeight as number }).pipe(
         catchError(() => of({ items: [] })),
         takeUntil(this.requestChanged$),
         takeUntil(this.destroy$),
       ).subscribe(response => {
         this.operations = response.items;
+        this.matchChange.emit(this.operations.length > 0);
         this.cd.markForCheck();
       });
     }
@@ -93,7 +71,19 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
     return value && value.length > 18 ? `${value.slice(0, 10)}…${value.slice(-6)}` : value || '—';
   }
 
-  formatAtoms(value?: string): string {
-    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 8 }).format(Number(value || 0) / 100_000_000);
+  formatSats(value?: string | number | null): string {
+    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Number(value || 0));
+  }
+
+  formatUsd(value?: string | number | null): string {
+    if (value === null || value === undefined || value === '') return '—';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2,
+    }).format(Number(value));
+  }
+
+  pnlClass(value?: string | null): string {
+    const numeric = Number(value || 0);
+    return numeric > 0 ? 'positive' : numeric < 0 ? 'negative' : '';
   }
 }

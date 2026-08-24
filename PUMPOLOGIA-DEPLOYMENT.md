@@ -5,7 +5,7 @@ This fork adds a production-oriented deployment for a self-hosted Mempool explor
 ## Architecture
 
 - `pumpologia-mempool-web`: Pumpologia-branded Angular frontend built from this fork, reachable locally on `127.0.0.1:8082` and from the existing `pumpologia_default` Docker network on port `8080`.
-- `pumpologia-mempool-api`: backend built from this fork on host port `8999` so it can use the existing loopback-only Bitcoin Core RPC, Electrs and the Pumpologia indexer. Its `/api/pumpologia/v1/*` gateway is read-only, validates public inputs and never exposes simulation or administrative endpoints.
+- `pumpologia-mempool-api`: backend built from this fork on host port `8999` so it can use the existing loopback-only Bitcoin Core RPC, Electrs and the Pumpologia indexer. Its `/api/pumpologia/v1/*` gateway is read-only and returns purpose-built trading DTOs; health, sync, account, oracle, scripts, raw payloads and internal indexer records are not public routes.
 - `pumpologia-mempool-db`: isolated MariaDB on `127.0.0.1:3307`.
 - Bitcoin Core: existing mainnet node at `127.0.0.1:8332`, authenticated through the read-only mounted cookie.
 - Electrs: existing mainnet server at `127.0.0.1:50001`, without TLS because traffic stays on the host.
@@ -45,6 +45,7 @@ docker compose \
 curl --fail http://127.0.0.1:8999/api/v1/backend-info
 curl --fail http://127.0.0.1:8082/api/blocks/tip/height
 curl --fail http://127.0.0.1:8082/api/pumpologia/v1/summary
+test "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:8082/api/pumpologia/v1/health)" = 404
 curl --fail http://127.0.0.1:8082/
 ```
 

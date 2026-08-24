@@ -48,7 +48,6 @@ import { ActiveAccelerationBox } from '@components/acceleration/active-accelerat
 import { AddressesTreemap } from '@components/addresses-treemap/addresses-treemap.component';
 import { TaprootAddressScriptsModule } from '@components/taproot-address-scripts/taproot-address-scripts.module';
 import { CommonModule } from '@angular/common';
-import { PumpologiaSummaryComponent } from '@app/pumpologia/pumpologia-summary.component';
 import { PumpologiaExplorerComponent } from '@app/pumpologia/pumpologia-explorer.component';
 import { PumpologiaContextComponent } from '@app/pumpologia/pumpologia-context.component';
 
@@ -98,7 +97,6 @@ import { PumpologiaContextComponent } from '@app/pumpologia/pumpologia-context.c
     UtxoGraphComponent,
     ActiveAccelerationBox,
     AddressesTreemap,
-    PumpologiaSummaryComponent,
     PumpologiaExplorerComponent,
   ],
   imports: [

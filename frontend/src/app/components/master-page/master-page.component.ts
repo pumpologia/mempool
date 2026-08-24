@@ -34,6 +34,7 @@ export class MasterPageComponent implements OnInit, OnDestroy {
   servicesEnabled = false;
   menuOpen = false;
   isDropdownVisible: boolean;
+  readonly pumpologiaBuild = (window as any).__env?.customize?.branding?.name === 'pumpologia';
 
   enterpriseInfo: any;
   enterpriseInfo$: Subscription;

@@ -2,79 +2,90 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-export interface PumpologiaToken {
-  token_id: string;
-  tick_canonical: string;
-  max_supply_tokens: string;
-  minted_supply_atoms: string;
-  net_supply_atoms: string;
-  deploy_height: number;
-  first_active_height: number;
-  state: string;
+export interface PumpologiaMarket {
+  symbol: string;
+  status: string;
 }
 
 export interface PumpologiaPosition {
   position_id: string;
-  token_id: string;
-  tick_canonical: string;
-  direction: 'long' | 'short';
-  owner_script_hash: string;
-  amt_sats: number;
+  txid: string;
+  market: string;
+  side: 'long' | 'short';
+  status: string;
+  margin_sats: string;
   leverage: number;
   notional_sats: string;
   open_height: number;
-  entry_price: number;
-  state: string;
-  close_height?: number;
-  outcome?: string;
-  terminal_reason?: string;
+  close_height: number | null;
+  entry_price_usd: number | null;
+  mark_price_usd: number | null;
+  exit_price_usd: number | null;
+  liquidation_price_usd: number | null;
+  take_profit_price_usd: number | null;
+  stop_loss_price_usd: number | null;
+  take_profit_bps: number;
+  stop_loss_bps: number;
+  pnl_usd: string | null;
+  pnl_kind: 'unrealized' | 'realized' | 'none';
+  return_bps: number | null;
+  outcome: string | null;
+  close_reason: string | null;
 }
 
 export interface PumpologiaOperation {
-  txid?: string;
+  txid: string | null;
   block_height: number;
-  op: string;
+  type: string;
   status: string;
-  tick_canonical?: string;
-  position_id?: string;
-  direction?: string;
-  leverage?: number;
-  state?: string;
-  outcome?: string;
-  event_id: string;
+  position_id: string | null;
+  market: string;
+  side: 'long' | 'short' | '';
+  trade_status: string;
+  margin_sats: string;
+  leverage: number;
+  notional_sats: string;
+  entry_price_usd: number | null;
+  mark_price_usd: number | null;
+  exit_price_usd: number | null;
+  pnl_usd: string | null;
+  pnl_kind: 'unrealized' | 'realized' | 'none';
+  return_bps: number | null;
+  outcome: string | null;
 }
 
 export interface PumpologiaLeaderboardEntry {
   rank: number;
-  owner_script_hash: string;
+  trader: string;
+  pnl_usd: string | null;
   pnl_sats: string;
-  average_return_bps: string;
-  trade_count: number;
+  average_return_bps: number;
+  trades: number;
   wins: number;
   losses: number;
   last_trade_height: number;
 }
 
 export interface PumpologiaSummary {
-  generated_at: string;
-  protocol_version: string;
-  sync: {
-    checkpoint_height: number;
-    checkpoint_hash: string;
-    operation_count: number;
-    protocol_version: string;
+  as_of: {
+    block_height: number;
+    block_hash: string;
+    indexed_operations: number;
   };
-  tokens: PumpologiaToken[];
-  position_counts: {
+  mark_price_usd: number | null;
+  markets: PumpologiaMarket[];
+  positions: {
     total: number;
-    by_state: Record<string, number>;
+    open: number;
+    closed: number;
+    liquidated: number;
+    expired: number;
+    open_interest_sats: string;
+    open_margin_sats: string;
   };
-  leaderboard: {
-    as_of_height: number;
-    items: PumpologiaLeaderboardEntry[];
-    total: number;
-  };
-  operations: PumpologiaOperation[];
+  traders: number;
+  top_traders: PumpologiaLeaderboardEntry[];
+  recent_activity: PumpologiaOperation[];
 }
 
 export interface PumpologiaPositionsResponse {
@@ -86,7 +97,11 @@ export interface PumpologiaPositionsResponse {
 
 export interface PumpologiaOperationsResponse {
   items: PumpologiaOperation[];
-  next_cursor?: string;
+}
+
+export interface PumpologiaOperationDetail {
+  txid: string;
+  items: PumpologiaOperation[];
 }
 
 export interface PumpologiaLeaderboardResponse {
@@ -107,9 +122,11 @@ export class PumpologiaApiService {
   }
 
   getPositions$(filters: Record<string, string | number> = {}): Observable<PumpologiaPositionsResponse> {
-    return this.http.get<PumpologiaPositionsResponse>(`${this.baseUrl}/positions`, {
-      params: this.toParams(filters),
-    });
+    return this.http.get<PumpologiaPositionsResponse>(`${this.baseUrl}/positions`, { params: this.toParams(filters) });
+  }
+
+  getPosition$(positionId: string): Observable<PumpologiaPosition> {
+    return this.http.get<PumpologiaPosition>(`${this.baseUrl}/positions/${encodeURIComponent(positionId)}`);
   }
 
   getLeaderboard$(period = 'all', limit = 50): Observable<PumpologiaLeaderboardResponse> {
@@ -118,38 +135,14 @@ export class PumpologiaApiService {
     });
   }
 
-  getOperations$(limit = 50, cursor?: string, operationFilters: Record<string, string | number> = {}): Observable<PumpologiaOperationsResponse> {
-    const filters: Record<string, string | number> = { limit, ...operationFilters };
-    if (cursor) {
-      filters.cursor = cursor;
-    }
+  getOperations$(limit = 25, operationFilters: Record<string, string | number> = {}): Observable<PumpologiaOperationsResponse> {
     return this.http.get<PumpologiaOperationsResponse>(`${this.baseUrl}/operations`, {
-      params: this.toParams(filters),
+      params: this.toParams({ limit, ...operationFilters }),
     });
   }
 
-  getToken$(tokenId: string): Observable<Record<string, unknown>> {
-    return this.http.get<Record<string, unknown>>(`${this.baseUrl}/tokens/${encodeURIComponent(tokenId)}`);
-  }
-
-  getTicker$(tick: string): Observable<Record<string, unknown>> {
-    return this.http.get<Record<string, unknown>>(`${this.baseUrl}/tickers/${encodeURIComponent(tick)}`);
-  }
-
-  getPosition$(positionId: string): Observable<Record<string, unknown>> {
-    return this.http.get<Record<string, unknown>>(`${this.baseUrl}/positions/${encodeURIComponent(positionId)}`);
-  }
-
-  getAccount$(ownerScriptHash: string): Observable<Record<string, unknown>> {
-    return this.http.get<Record<string, unknown>>(`${this.baseUrl}/accounts/${encodeURIComponent(ownerScriptHash)}`);
-  }
-
-  getOperation$(txid: string): Observable<Record<string, unknown>> {
-    return this.http.get<Record<string, unknown>>(`${this.baseUrl}/operations/${encodeURIComponent(txid)}`);
-  }
-
-  getOraclePrice$(height: string): Observable<Record<string, unknown>> {
-    return this.http.get<Record<string, unknown>>(`${this.baseUrl}/oracle/prices/${encodeURIComponent(height)}`);
+  getOperation$(txid: string): Observable<PumpologiaOperationDetail> {
+    return this.http.get<PumpologiaOperationDetail>(`${this.baseUrl}/operations/${encodeURIComponent(txid)}`);
   }
 
   private toParams(filters: Record<string, string | number>): HttpParams {

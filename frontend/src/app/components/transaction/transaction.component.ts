@@ -74,6 +74,7 @@ const DUPLICATE_TX_BLOCKS: Record<string, [number, number]> = {
   standalone: false,
 })
 export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
+  pumpologiaMatch = false;
   network = '';
   tx: Transaction;
   txId: string;

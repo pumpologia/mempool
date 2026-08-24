@@ -17,16 +17,18 @@ request_json() {
 request_json /api/v1/blocks/tip/height "$work_dir/tip.json"
 jq -e 'type == "number" and . > 0' "$work_dir/tip.json" >/dev/null
 
-request_json /api/pumpologia/v1/health "$work_dir/health.json"
-jq -e 'type == "object"' "$work_dir/health.json" >/dev/null
+status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+  --connect-timeout 5 --max-time 20 \
+  "${base_url}/api/pumpologia/v1/health")
+test "$status" = "404"
 
 request_json /api/pumpologia/v1/summary "$work_dir/summary.json"
 jq -e '
-  .protocol_version == "pumpologia-v1" and
-  (.sync.checkpoint_height | type == "number") and
-  (.position_counts.total | type == "number") and
-  (.tokens | type == "array") and
-  (.operations | type == "array")
+  (.as_of.block_height | type == "number") and
+  (.positions.total | type == "number") and
+  (.positions.open_interest_sats | type == "string") and
+  (.markets | type == "array") and
+  (.recent_activity | type == "array")
 ' "$work_dir/summary.json" >/dev/null
 
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' \

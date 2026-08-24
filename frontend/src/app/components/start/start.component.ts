@@ -15,6 +15,7 @@ import { handleDemoRedirect } from '@app/shared/common.utils';
 })
 export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
   @Input() showLoadingIndicator = false;
+  readonly pumpologiaBuild = (window as any).__env?.customize?.branding?.name === 'pumpologia';
 
   interval = 60;
   colors = ['#5E35B1', '#ffffff'];

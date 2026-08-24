@@ -3,15 +3,16 @@ import { ActivatedRoute } from '@angular/router';
 import {
   PumpologiaApiService,
   PumpologiaLeaderboardResponse,
-  PumpologiaOperationsResponse,
+  PumpologiaOperation,
   PumpologiaPositionsResponse,
+  PumpologiaPosition,
   PumpologiaSummary,
 } from '@app/services/pumpologia-api.service';
 import { SeoService } from '@app/services/seo.service';
 import { BehaviorSubject, Observable, Subject, of, timer } from 'rxjs';
 import { catchError, shareReplay, switchMap, takeUntil } from 'rxjs/operators';
 
-type DetailKind = 'overview' | 'token' | 'ticker' | 'position' | 'account' | 'operation' | 'oracle';
+type PageKind = 'overview' | 'position';
 
 @Component({
   selector: 'app-pumpologia-explorer',
@@ -21,8 +22,8 @@ type DetailKind = 'overview' | 'token' | 'ticker' | 'position' | 'account' | 'op
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
-  readonly detailKind = (this.route.snapshot.data.kind || 'overview') as DetailKind;
-  readonly detailId = this.getDetailId();
+  readonly pageKind = (this.route.snapshot.data.kind || 'overview') as PageKind;
+  readonly positionId = this.route.snapshot.paramMap.get('positionId') || '';
   readonly initialSection = this.route.snapshot.data.section as string | undefined;
   readonly limit = 50;
   readonly stateOptions = ['', 'OPEN', 'CLOSED', 'LIQUIDATED', 'EXPIRED'];
@@ -58,12 +59,12 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
-  readonly operations$: Observable<PumpologiaOperationsResponse | null> = this.pumpologiaApi.getOperations$(50).pipe(
-    catchError(() => of(null)),
-    shareReplay({ bufferSize: 1, refCount: true }),
-  );
-
-  readonly detail$: Observable<Record<string, unknown> | null> = this.loadDetail();
+  readonly position$: Observable<PumpologiaPosition | null> = this.pageKind === 'position'
+    ? this.pumpologiaApi.getPosition$(this.positionId).pipe(
+      catchError(() => of(null)),
+      shareReplay({ bufferSize: 1, refCount: true }),
+    )
+    : of(null);
 
   constructor(
     private route: ActivatedRoute,
@@ -72,9 +73,8 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    const pageName = this.detailKind === 'overview' ? 'Pumpologia Protocol' : `Pumpologia ${this.capitalize(this.detailKind)}`;
-    this.seoService.setTitle(pageName);
-    this.seoService.setDescription('Inspect Pumpologia protocol state and trace every indexed event back to Bitcoin.');
+    this.seoService.setTitle(this.pageKind === 'position' ? 'Pumpologia Position' : 'Pumpologia Trading Terminal');
+    this.seoService.setDescription('Track Pumpologia perpetual positions, leverage, margin, notional exposure and P&L anchored to Bitcoin.');
     this.summary$.pipe(takeUntil(this.destroy$)).subscribe();
     if (this.initialSection) {
       setTimeout(() => document.getElementById(this.initialSection)?.scrollIntoView({ block: 'start' }), 150);
@@ -108,90 +108,45 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
     this.leaderboardPeriod$.next(value);
   }
 
-  shortHash(value?: string, leading = 8, trailing = 6): string {
-    if (!value) {
-      return '—';
-    }
-    if (value.length <= leading + trailing + 1) {
-      return value;
-    }
+  shortHash(value?: string | null, leading = 8, trailing = 6): string {
+    if (!value) return '—';
+    if (value.length <= leading + trailing + 1) return value;
     return `${value.slice(0, leading)}…${value.slice(-trailing)}`;
   }
 
-  formatAtoms(value?: string): string {
-    const amount = Number(value || 0) / 100_000_000;
-    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 8 }).format(amount);
-  }
-
-  formatSats(value?: string | number): string {
+  formatSats(value?: string | number | null): string {
     return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Number(value || 0));
   }
 
-  formatReturn(value?: string): string {
-    return `${(Number(value || 0) / 100).toFixed(2)}%`;
+  formatUsd(value?: string | number | null): string {
+    if (value === null || value === undefined || value === '') return '—';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(value));
   }
 
-  objectEntries(value: Record<string, unknown> | null): Array<{ key: string; value: unknown }> {
-    if (!value) {
-      return [];
-    }
-    return Object.entries(value).map(([key, entryValue]) => ({ key, value: entryValue }));
+  formatReturn(value?: number | null): string {
+    if (value === null || value === undefined) return '—';
+    return `${(value / 100).toFixed(2)}%`;
   }
 
-  isPrimitive(value: unknown): boolean {
-    return value === null || ['string', 'number', 'boolean'].includes(typeof value);
+  pnlClass(value?: string | null): string {
+    const numeric = Number(value || 0);
+    return numeric > 0 ? 'positive' : numeric < 0 ? 'negative' : '';
+  }
+
+  operationLabel(operation: PumpologiaOperation): string {
+    if (operation.side) return `${operation.side.toUpperCase()} ${operation.market}`;
+    return operation.type;
   }
 
   private makePositionFilters(): Record<string, string | number> {
     const filters: Record<string, string | number> = { limit: this.limit, offset: this.positionOffset };
-    if (this.positionState) {
-      filters.state = this.positionState;
-    }
-    if (this.positionDirection) {
-      filters.direction = this.positionDirection;
-    }
+    if (this.positionState) filters.state = this.positionState;
+    if (this.positionDirection) filters.direction = this.positionDirection;
     return filters;
-  }
-
-  private getDetailId(): string {
-    const params = this.route.snapshot.paramMap;
-    return params.get('tokenId')
-      || params.get('tick')
-      || params.get('positionId')
-      || params.get('ownerScriptHash')
-      || params.get('txid')
-      || params.get('height')
-      || '';
-  }
-
-  private loadDetail(): Observable<Record<string, unknown> | null> {
-    let request$: Observable<Record<string, unknown>>;
-    switch (this.detailKind) {
-      case 'token':
-        request$ = this.pumpologiaApi.getToken$(this.detailId);
-        break;
-      case 'ticker':
-        request$ = this.pumpologiaApi.getTicker$(this.detailId);
-        break;
-      case 'position':
-        request$ = this.pumpologiaApi.getPosition$(this.detailId);
-        break;
-      case 'account':
-        request$ = this.pumpologiaApi.getAccount$(this.detailId);
-        break;
-      case 'operation':
-        request$ = this.pumpologiaApi.getOperation$(this.detailId);
-        break;
-      case 'oracle':
-        request$ = this.pumpologiaApi.getOraclePrice$(this.detailId);
-        break;
-      default:
-        return of(null);
-    }
-    return request$.pipe(catchError(() => of(null)), shareReplay({ bufferSize: 1, refCount: true }));
-  }
-
-  private capitalize(value: string): string {
-    return value.charAt(0).toUpperCase() + value.slice(1);
   }
 }

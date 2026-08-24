@@ -44,6 +44,7 @@ interface ComparisonStats {
   `],
 })
 export class BlockComponent implements OnInit, OnDestroy {
+  pumpologiaMatch = false;
   network = '';
   block: BlockExtended;
   blockAudit: BlockAudit = undefined;
