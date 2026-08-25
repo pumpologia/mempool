@@ -35,7 +35,7 @@
 .title-link {
   color: var(--fg);
   flex: 0 0 auto;
-  font-size: 0.8rem;
+  font-size: 0.86rem;
   font-weight: 400;
   letter-spacing: 0.065em;
   text-decoration: underline;
@@ -51,7 +51,7 @@
 .positions-table th {
   border-top: 0;
   color: var(--transparent-fg);
-  font-size: 0.76rem;
+  font-size: 0.84rem;
   font-weight: 400;
   letter-spacing: 0.075em;
   text-transform: uppercase;
@@ -60,7 +60,7 @@
 
 .positions-table td {
   border-color: var(--border-subtle);
-  font-size: 0.88rem;
+  font-size: 0.94rem;
   vertical-align: middle;
 }
 
@@ -78,7 +78,7 @@
   color: var(--transparent-fg);
   display: block;
   font-family: var(--font-interface);
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   font-weight: 400;
 }
 
@@ -90,30 +90,27 @@
 }
 
 .side-badge {
-  background: #f2f2ed;
-  border: 1px solid #f2f2ed;
-  color: #0d0d0d;
+  background: rgba(143, 174, 201, 0.15);
+  border: 1px solid var(--pump-long);
+  color: var(--pump-long);
   font-weight: 400;
   text-transform: uppercase;
 }
 
 .side-badge.short {
-  background: transparent;
-  border-color: #777773;
-  color: #f2f2ed;
+  background: rgba(170, 152, 197, 0.14);
+  border-color: var(--pump-short);
+  color: var(--pump-short);
 }
 
-.positive,
-.negative {
-  color: var(--fg);
-  font-weight: 400;
-}
+.positive { color: var(--pump-positive); font-weight: 400; }
+.negative { color: var(--pump-negative); font-weight: 400; }
 
 .widget-state {
   align-items: center;
   color: var(--transparent-fg);
   display: flex;
-  font-size: 0.88rem;
+  font-size: 0.94rem;
   gap: 0.6rem;
   justify-content: center;
   min-height: 7rem;

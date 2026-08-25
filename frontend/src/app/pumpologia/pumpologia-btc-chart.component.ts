@@ -87,7 +87,11 @@ export class PumpologiaBtcChartComponent implements OnInit, OnDestroy {
 
   private mountChart(snapshot: PumpologiaBtcChartResponse): void {
     const candles = snapshot.candles;
-    const categories = candles.map(point => String(point.time));
+    const trailingSlots = Math.max(6, Math.ceil(candles.length * 0.045));
+    const categories = [
+      ...candles.map(point => String(point.time)),
+      ...Array.from({ length: trailingSlots }, () => ''),
+    ];
     const referenceByTime = new Map(snapshot.reference.map(point => [point.time, point.value]));
     const firstClose = candles[0].close;
     const lastClose = candles[candles.length - 1].close;
@@ -103,7 +107,7 @@ export class PumpologiaBtcChartComponent implements OnInit, OnDestroy {
         fontFamily: 'Pixel Operator, monospace',
         fontSize: 14,
       },
-      grid: { left: 16, right: 72, top: 24, bottom: 42, containLabel: false },
+      grid: { left: 16, right: 58, top: 24, bottom: 42, containLabel: false },
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'cross', lineStyle: { color: '#8c8c87', type: 'dashed' } },
@@ -138,11 +142,11 @@ export class PumpologiaBtcChartComponent implements OnInit, OnDestroy {
         axisLine: { lineStyle: { color: '#494946' } },
         axisTick: { show: false },
         axisLabel: {
-          color: '#a7a7a1',
+          color: '#b4b4ae',
           fontFamily: 'Pixel Operator, monospace',
           fontSize: 13,
           hideOverlap: true,
-          formatter: (value: string) => this.formatAxisLabel(Number(value)),
+          formatter: (value: string) => value ? this.formatAxisLabel(Number(value)) : '',
         },
       },
       yAxis: {
@@ -152,30 +156,23 @@ export class PumpologiaBtcChartComponent implements OnInit, OnDestroy {
         axisLine: { show: true, lineStyle: { color: '#494946' } },
         axisTick: { show: false },
         axisLabel: {
-          color: '#a7a7a1',
+          color: '#b4b4ae',
           fontFamily: 'Pixel Operator, monospace',
           fontSize: 13,
           formatter: (value: number) => `$${Math.round(value / 1000)}k`,
         },
         splitLine: { lineStyle: { color: '#30302e', type: 'dotted' } },
       },
-      dataZoom: [{
-        type: 'inside',
-        start: candles.length > 96 ? 35 : 0,
-        end: 100,
-        zoomOnMouseWheel: true,
-        moveOnMouseMove: true,
-      }],
       series: [
         {
           name: 'Pumpologia oracle',
           type: 'candlestick',
           data: candles.map(point => [point.open, point.close, point.low, point.high]),
           itemStyle: {
-            color: '#f2f2ed',
-            color0: '#111111',
-            borderColor: '#f2f2ed',
-            borderColor0: '#8c8c87',
+            color: '#8fb69a',
+            color0: '#171219',
+            borderColor: '#8fb69a',
+            borderColor0: '#bd8c8a',
             borderWidth: 1.5,
           },
         },
@@ -186,7 +183,7 @@ export class PumpologiaBtcChartComponent implements OnInit, OnDestroy {
           symbol: 'none',
           showSymbol: false,
           connectNulls: false,
-          lineStyle: { color: '#8c8c87', type: 'dashed', width: 1.5 },
+          lineStyle: { color: '#8faec9', type: 'dashed', width: 1.5 },
           emphasis: { disabled: true },
         },
       ],

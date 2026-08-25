@@ -118,6 +118,10 @@ export interface PumpologiaPositionsResponse {
 
 export interface PumpologiaOperationsResponse {
   items: PumpologiaOperation[];
+  limit: number;
+  offset: number;
+  has_more: boolean;
+  as_of_height: number;
 }
 
 export interface PumpologiaOperationDetail {
@@ -130,6 +134,8 @@ export interface PumpologiaLeaderboardResponse {
   items: PumpologiaLeaderboardEntry[];
   total: number;
   period: string;
+  limit: number;
+  offset: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -156,9 +162,9 @@ export class PumpologiaApiService {
     return this.http.get<PumpologiaPosition>(`${this.baseUrl}/positions/${encodeURIComponent(positionId)}`);
   }
 
-  getLeaderboard$(period = 'all', limit = 50): Observable<PumpologiaLeaderboardResponse> {
+  getLeaderboard$(period = 'all', limit = 12, offset = 0): Observable<PumpologiaLeaderboardResponse> {
     return this.http.get<PumpologiaLeaderboardResponse>(`${this.baseUrl}/leaderboard`, {
-      params: this.toParams({ period, limit }),
+      params: this.toParams({ period, limit, offset }),
     });
   }
 

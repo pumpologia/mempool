@@ -30,6 +30,10 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
   @Output() matchChange = new EventEmitter<boolean>();
 
   operations: PumpologiaOperation[] = [];
+  readonly pageSize = 6;
+  operationOffset = 0;
+  hasMore = false;
+  isLoading = false;
   private readonly requestChanged$ = new Subject<void>();
   private readonly destroy$ = new Subject<void>();
 
@@ -41,6 +45,9 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
   ngOnChanges(): void {
     this.requestChanged$.next();
     this.operations = [];
+    this.operationOffset = 0;
+    this.hasMore = false;
+    this.isLoading = true;
 
     if (this.txid && /^[a-f0-9]{64}$/i.test(this.txid)) {
       this.pumpologiaApi.getOperation$(this.txid).pipe(
@@ -49,6 +56,7 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
         takeUntil(this.destroy$),
       ).subscribe(operation => {
         this.operations = Array.isArray(operation?.items) ? operation.items : [];
+        this.isLoading = false;
         this.matchChange.emit(this.operations.length > 0);
         this.cd.markForCheck();
       });
@@ -56,16 +64,35 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
     }
 
     if (Number.isSafeInteger(this.blockHeight) && (this.blockHeight as number) >= 0) {
-      this.pumpologiaApi.getOperations$(25, { block_height: this.blockHeight as number }).pipe(
-        catchError(() => of({ items: [] })),
-        takeUntil(this.requestChanged$),
-        takeUntil(this.destroy$),
-      ).subscribe(response => {
-        this.operations = response.items;
-        this.matchChange.emit(this.operations.length > 0);
-        this.cd.markForCheck();
-      });
+      this.loadBlockOperations();
+      return;
     }
+
+    this.isLoading = false;
+  }
+
+  changeBlockPage(delta: number): void {
+    this.operationOffset = Math.max(0, this.operationOffset + (delta * this.pageSize));
+    this.requestChanged$.next();
+    this.isLoading = true;
+    this.loadBlockOperations();
+  }
+
+  private loadBlockOperations(): void {
+    this.pumpologiaApi.getOperations$(this.pageSize, {
+      block_height: this.blockHeight as number,
+      offset: this.operationOffset,
+    }).pipe(
+      catchError(() => of({ items: [], has_more: false })),
+      takeUntil(this.requestChanged$),
+      takeUntil(this.destroy$),
+    ).subscribe(response => {
+      this.operations = response.items;
+      this.hasMore = response.has_more;
+      this.isLoading = false;
+      this.matchChange.emit(this.operations.length > 0);
+      this.cd.markForCheck();
+    });
   }
 
   ngOnDestroy(): void {

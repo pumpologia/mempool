@@ -4,13 +4,14 @@ import {
   PumpologiaApiService,
   PumpologiaLeaderboardResponse,
   PumpologiaOperation,
+  PumpologiaOperationsResponse,
   PumpologiaPositionsResponse,
   PumpologiaPosition,
   PumpologiaSummary,
 } from '@app/services/pumpologia-api.service';
 import { SeoService } from '@app/services/seo.service';
 import { BehaviorSubject, Observable, Subject, of, timer } from 'rxjs';
-import { catchError, shareReplay, switchMap, takeUntil } from 'rxjs/operators';
+import { catchError, shareReplay, startWith, switchMap, takeUntil } from 'rxjs/operators';
 import { IconName } from '@fortawesome/fontawesome-common-types';
 import {
   pumpologiaEventIcon,
@@ -32,7 +33,9 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
   readonly pageKind = (this.route.snapshot.data.kind || 'overview') as PageKind;
   readonly positionId = this.route.snapshot.paramMap.get('positionId') || '';
   readonly initialSection = this.route.snapshot.data.section as string | undefined;
-  readonly limit = 50;
+  readonly positionLimit = 25;
+  readonly leaderboardLimit = 12;
+  readonly activityLimit = 9;
   readonly stateOptions = ['', 'OPEN', 'CLOSED', 'LIQUIDATED', 'EXPIRED'];
   readonly directionOptions = ['', 'long', 'short'];
 
@@ -41,10 +44,13 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
   positionDirection = '';
   positionOffset = 0;
   leaderboardPeriod = 'all';
+  leaderboardOffset = 0;
+  activityOffset = 0;
 
   private readonly destroy$ = new Subject<void>();
   private readonly positionFilters$ = new BehaviorSubject<Record<string, string | number>>(this.makePositionFilters());
-  private readonly leaderboardPeriod$ = new BehaviorSubject<string>('all');
+  private readonly leaderboardRequest$ = new BehaviorSubject<{ period: string; offset: number }>({ period: 'all', offset: 0 });
+  private readonly activityOffset$ = new BehaviorSubject<number>(0);
 
   readonly summary$: Observable<PumpologiaSummary | null> = timer(0, 15_000).pipe(
     switchMap(() => this.pumpologiaApi.getSummary$().pipe(
@@ -57,12 +63,26 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
   );
 
   readonly positions$: Observable<PumpologiaPositionsResponse | null> = this.positionFilters$.pipe(
-    switchMap(filters => this.pumpologiaApi.getPositions$(filters).pipe(catchError(() => of(null)))),
+    switchMap(filters => this.pumpologiaApi.getPositions$(filters).pipe(
+      catchError(() => of(null)),
+      startWith(null),
+    )),
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
-  readonly leaderboard$: Observable<PumpologiaLeaderboardResponse | null> = this.leaderboardPeriod$.pipe(
-    switchMap(period => this.pumpologiaApi.getLeaderboard$(period).pipe(catchError(() => of(null)))),
+  readonly leaderboard$: Observable<PumpologiaLeaderboardResponse | null> = this.leaderboardRequest$.pipe(
+    switchMap(request => this.pumpologiaApi.getLeaderboard$(request.period, this.leaderboardLimit, request.offset).pipe(
+      catchError(() => of(null)),
+      startWith(null),
+    )),
+    shareReplay({ bufferSize: 1, refCount: true }),
+  );
+
+  readonly activity$: Observable<PumpologiaOperationsResponse | null> = this.activityOffset$.pipe(
+    switchMap(offset => this.pumpologiaApi.getOperations$(this.activityLimit, { offset }).pipe(
+      catchError(() => of(null)),
+      startWith(null),
+    )),
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
@@ -106,13 +126,24 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
   }
 
   changePositionPage(delta: number): void {
-    this.positionOffset = Math.max(0, this.positionOffset + (delta * this.limit));
+    this.positionOffset = Math.max(0, this.positionOffset + (delta * this.positionLimit));
     this.positionFilters$.next(this.makePositionFilters());
   }
 
   setLeaderboardPeriod(value: string): void {
     this.leaderboardPeriod = value;
-    this.leaderboardPeriod$.next(value);
+    this.leaderboardOffset = 0;
+    this.leaderboardRequest$.next({ period: value, offset: 0 });
+  }
+
+  changeLeaderboardPage(delta: number): void {
+    this.leaderboardOffset = Math.max(0, this.leaderboardOffset + (delta * this.leaderboardLimit));
+    this.leaderboardRequest$.next({ period: this.leaderboardPeriod, offset: this.leaderboardOffset });
+  }
+
+  changeActivityPage(delta: number): void {
+    this.activityOffset = Math.max(0, this.activityOffset + (delta * this.activityLimit));
+    this.activityOffset$.next(this.activityOffset);
   }
 
   shortHash(value?: string | null, leading = 8, trailing = 6): string {
@@ -167,7 +198,7 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
   }
 
   private makePositionFilters(): Record<string, string | number> {
-    const filters: Record<string, string | number> = { limit: this.limit, offset: this.positionOffset };
+    const filters: Record<string, string | number> = { limit: this.positionLimit, offset: this.positionOffset };
     if (this.positionState) filters.state = this.positionState;
     if (this.positionDirection) filters.direction = this.positionDirection;
     return filters;

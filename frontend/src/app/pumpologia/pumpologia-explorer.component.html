@@ -106,7 +106,7 @@
                   <strong>{{ formatUsd(position.pnl_usd) }}</strong>
                   <small>{{ position.pnl_kind === 'unrealized' ? 'unrealized' : formatReturn(position.return_bps) }}</small>
                 </td>
-                <td><span class="state-badge" [class.state-active]="position.status === 'OPEN'">{{ position.status }}</span></td>
+                <td><span class="state-badge" [ngClass]="'state-' + position.status.toLowerCase()">{{ position.status }}</span></td>
                 <td>
                   <a class="proof-link" [routerLink]="['/tx' | relativeUrl, position.txid]" [title]="position.txid">
                     Tx {{ shortHash(position.txid, 5, 4) }} ↗
@@ -120,9 +120,9 @@
         <div class="table-pagination">
           <span *ngIf="positions.items.length">{{ positionOffset + 1 }}–{{ positionOffset + positions.items.length }} of {{ positions.total }}</span>
           <span *ngIf="!positions.items.length">0 positions</span>
-          <div>
-            <button class="btn btn-sm btn-secondary" [disabled]="positionOffset === 0" (click)="changePositionPage(-1)">Previous</button>
-            <button class="btn btn-sm btn-secondary" [disabled]="positionOffset + positions.items.length >= positions.total" (click)="changePositionPage(1)">Next</button>
+          <div class="icon-pagination" aria-label="Position pages">
+            <button class="btn btn-sm btn-secondary" title="Previous positions" aria-label="Previous positions" [disabled]="positionOffset === 0" (click)="changePositionPage(-1)"><fa-icon [icon]="['fas', 'angle-left']" [fixedWidth]="true"></fa-icon></button>
+            <button class="btn btn-sm btn-secondary" title="Next positions" aria-label="Next positions" [disabled]="positionOffset + positions.items.length >= positions.total" (click)="changePositionPage(1)"><fa-icon [icon]="['fas', 'angle-right']" [fixedWidth]="true"></fa-icon></button>
           </div>
         </div>
       </ng-container>
@@ -157,8 +157,17 @@
                 <td>{{ entry.wins }}W / {{ entry.losses }}L</td>
                 <td><a [routerLink]="['/block' | relativeUrl, entry.last_trade_height]">#{{ entry.last_trade_height | number }}</a></td>
               </tr>
+              <tr *ngIf="!leaderboard.items.length"><td colspan="7" class="empty-state">No settled performance for this period.</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="table-pagination">
+          <span *ngIf="leaderboard.items.length">{{ leaderboardOffset + 1 }}–{{ leaderboardOffset + leaderboard.items.length }} of {{ leaderboard.total }}</span>
+          <span *ngIf="!leaderboard.items.length">0 traders</span>
+          <div class="icon-pagination" aria-label="Leaderboard pages">
+            <button class="btn btn-sm btn-secondary" title="Previous traders" aria-label="Previous traders" [disabled]="leaderboardOffset === 0" (click)="changeLeaderboardPage(-1)"><fa-icon [icon]="['fas', 'angle-left']" [fixedWidth]="true"></fa-icon></button>
+            <button class="btn btn-sm btn-secondary" title="Next traders" aria-label="Next traders" [disabled]="leaderboardOffset + leaderboard.items.length >= leaderboard.total" (click)="changeLeaderboardPage(1)"><fa-icon [icon]="['fas', 'angle-right']" [fixedWidth]="true"></fa-icon></button>
+          </div>
         </div>
       </ng-container>
     </section>
@@ -170,11 +179,11 @@
           <h2>Recent activity</h2>
           <p>Only Pumpologia events and the fields required to understand each trade.</p>
         </div>
-        <span class="count-label">Newest first</span>
+        <span class="count-label" title="Newest events first" aria-label="Newest events first"><fa-icon [icon]="['fas', 'clock']" [fixedWidth]="true"></fa-icon></span>
       </div>
-      <ng-container *ngIf="summary$ | async as summary; else loadingTable">
+      <ng-container *ngIf="activity$ | async as activity; else loadingTable">
         <div class="activity-grid">
-          <article *ngFor="let operation of summary.recent_activity" class="activity-card" [ngClass]="'event-' + operationEventKind(operation)">
+          <article *ngFor="let operation of activity.items" class="activity-card" [ngClass]="'event-' + operationEventKind(operation)">
             <div class="activity-top">
               <div class="event-identity">
                 <span class="event-icon" aria-hidden="true"><fa-icon [icon]="['fas', operationEventIcon(operation)]" [fixedWidth]="true"></fa-icon></span>
@@ -183,7 +192,7 @@
                   <h3>{{ operation.market || 'Pumpologia' }} <small>/ USD</small></h3>
                 </div>
               </div>
-              <span class="state-badge" [class.state-active]="operation.trade_status === 'OPEN'">{{ operation.trade_status }}</span>
+              <span class="state-badge" [ngClass]="'state-' + operation.trade_status.toLowerCase()">{{ operation.trade_status }}</span>
             </div>
             <div class="activity-state">
               <span class="side-pill" [class.short]="operation.side === 'short'">
@@ -207,6 +216,15 @@
               <a [routerLink]="['/block' | relativeUrl, operation.block_height]">Block {{ operation.block_height | number }}</a>
             </div>
           </article>
+          <div *ngIf="!activity.items.length" class="activity-empty">No Pumpologia event on this page.</div>
+        </div>
+        <div class="table-pagination">
+          <span *ngIf="activity.items.length">Events {{ activityOffset + 1 }}–{{ activityOffset + activity.items.length }}</span>
+          <span *ngIf="!activity.items.length">0 events</span>
+          <div class="icon-pagination" aria-label="Activity pages">
+            <button class="btn btn-sm btn-secondary" title="Newer events" aria-label="Newer events" [disabled]="activityOffset === 0" (click)="changeActivityPage(-1)"><fa-icon [icon]="['fas', 'angle-left']" [fixedWidth]="true"></fa-icon></button>
+            <button class="btn btn-sm btn-secondary" title="Older events" aria-label="Older events" [disabled]="!activity.has_more" (click)="changeActivityPage(1)"><fa-icon [icon]="['fas', 'angle-right']" [fixedWidth]="true"></fa-icon></button>
+          </div>
         </div>
       </ng-container>
     </section>
@@ -229,7 +247,7 @@
         <span class="side-pill large" [class.short]="position.side === 'short'">{{ position.side }}</span>
       </div>
       <div class="position-status">
-        <span class="state-badge" [class.state-active]="position.status === 'OPEN'">{{ position.status }}</span>
+        <span class="state-badge" [ngClass]="'state-' + position.status.toLowerCase()">{{ position.status }}</span>
         <small *ngIf="position.outcome">{{ position.outcome }} · {{ position.close_reason }}</small>
       </div>
     </section>
@@ -290,5 +308,5 @@
 </ng-template>
 
 <ng-template #loadingTable>
-  <div class="loading-panel" role="status">Loading trading data…</div>
+  <div class="loading-panel" role="status" aria-live="polite"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Loading this trading page…</div>
 </ng-template>

@@ -122,12 +122,11 @@ class PumpologiaRoutes {
         return;
       }
 
-      const [syncRaw, tokensRaw, positionsRaw, leaderboardRaw, operationsRaw] = await Promise.all([
+      const [syncRaw, tokensRaw, positionsRaw, leaderboardRaw] = await Promise.all([
         this.getIndexer('sync'),
         this.getIndexer('tokens'),
         this.getIndexer('positions'),
         this.getIndexer('leaderboard', { limit: 5 }),
-        this.getIndexer('operations', { limit: 12 }),
       ]);
       const sync = this.asRecord(syncRaw) as SyncRecord;
       const markPrice = await this.getMarkPrice(sync);
@@ -138,9 +137,6 @@ class PumpologiaRoutes {
         return counts;
       }, {});
       const leaderboard = this.asRecord(leaderboardRaw);
-      const operationResponse = this.asRecord(operationsRaw);
-      const operations = Array.isArray(operationResponse.items) ? operationResponse.items as OperationRecord[] : [];
-      const enrichedOperations = await this.sanitizeOperations(operations, markPrice);
 
       const data = {
         as_of: {
@@ -173,7 +169,9 @@ class PumpologiaRoutes {
         },
         traders: this.number(leaderboard.total),
         top_traders: this.sanitizeLeaderboardItems(leaderboard.items),
-        recent_activity: enrichedOperations,
+        // Compatibility field only. The trading tape now uses the bounded,
+        // paginated operations route instead of duplicating enrichment here.
+        recent_activity: [],
       };
       this.setCached('public-summary', data);
       this.sendJson(res, data, 10);
@@ -258,6 +256,8 @@ class PumpologiaRoutes {
         items: this.sanitizeLeaderboardItems(raw.items),
         total: this.number(raw.total),
         period: this.text(raw.period, period || 'all'),
+        limit,
+        offset,
       }, 15);
     } catch (error) {
       this.sendUpstreamError(res, error, 'leaderboard');
@@ -266,26 +266,27 @@ class PumpologiaRoutes {
 
   private async $getOperations(req: Request, res: Response): Promise<void> {
     const limit = this.parseInteger(req.query.limit, 1, 50, 25);
+    const offset = this.parseInteger(req.query.offset, 0, 3_900, 0);
     const blockHeight = this.parseOptionalInteger(req.query.block_height, 0, 10_000_000);
     const op = this.optionalString(req.query.op, STATE_REGEX);
     const status = this.optionalString(req.query.status, STATE_REGEX);
     const tick = this.optionalString(req.query.tick, TICK_REGEX);
-    if (limit === null || blockHeight === null || op === null || status === null || tick === null) {
+    if (limit === null || offset === null || blockHeight === null || op === null || status === null || tick === null) {
       this.sendValidationError(res, 'invalid operations filter');
       return;
     }
 
     try {
-      let items: OperationRecord[];
-      if (blockHeight !== undefined || op || status || tick) {
-        items = await this.getFilteredOperations({ blockHeight, op, status, tick }, limit);
-      } else {
-        const raw = this.asRecord(await this.getIndexer('operations', { limit }));
-        items = Array.isArray(raw.items) ? raw.items as OperationRecord[] : [];
-      }
+      const page = await this.getFilteredOperations({ blockHeight, op, status, tick }, limit, offset);
       const sync = this.asRecord(await this.getIndexer('sync')) as SyncRecord;
       const markPrice = await this.getMarkPrice(sync);
-      this.sendJson(res, { items: await this.sanitizeOperations(items, markPrice) }, 10);
+      this.sendJson(res, {
+        items: await this.sanitizeOperations(page.items, markPrice),
+        limit,
+        offset,
+        has_more: page.hasMore,
+        as_of_height: this.number(sync.checkpoint_height),
+      }, 10);
     } catch (error) {
       this.sendUpstreamError(res, error, 'operations');
     }
@@ -295,10 +296,12 @@ class PumpologiaRoutes {
   private async getFilteredOperations(
     filters: { blockHeight?: number; op?: string; status?: string; tick?: string },
     limit: number,
-  ): Promise<OperationRecord[]> {
-    const matches: OperationRecord[] = [];
+    offset = 0,
+  ): Promise<{ items: OperationRecord[]; hasMore: boolean }> {
+    const pageItems: OperationRecord[] = [];
+    let matched = 0;
     let cursor: string | undefined;
-    for (let page = 0; page < 40 && matches.length < limit; page++) {
+    for (let page = 0; page < 40 && pageItems.length <= limit; page++) {
       const query: Record<string, string | number> = { limit: 100 };
       if (cursor) {
         query.cursor = cursor;
@@ -310,8 +313,9 @@ class PumpologiaRoutes {
         if (filters.op && this.text(item.op).toLowerCase() !== filters.op.toLowerCase()) continue;
         if (filters.status && this.text(item.status).toLowerCase() !== filters.status.toLowerCase()) continue;
         if (filters.tick && this.text(item.tick_canonical).toLowerCase() !== filters.tick.toLowerCase()) continue;
-        matches.push(item);
-        if (matches.length >= limit) break;
+        if (matched++ < offset) continue;
+        pageItems.push(item);
+        if (pageItems.length > limit) break;
       }
       const nextCursor = this.text(response.next_cursor);
       if (!nextCursor || items.length === 0) break;
@@ -321,7 +325,7 @@ class PumpologiaRoutes {
       }
       cursor = nextCursor;
     }
-    return matches;
+    return { items: pageItems.slice(0, limit), hasMore: pageItems.length > limit };
   }
 
   private async $getOperation(req: Request, res: Response): Promise<void> {

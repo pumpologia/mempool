@@ -28,8 +28,23 @@ jq -e '
   (.positions.total | type == "number") and
   (.positions.open_interest_sats | type == "string") and
   (.markets | type == "array") and
-  (.recent_activity | type == "array")
+  (.recent_activity | type == "array" and length == 0)
 ' "$work_dir/summary.json" >/dev/null
+
+request_json '/api/pumpologia/v1/operations?limit=3&offset=0' "$work_dir/operations-first.json"
+jq -e '
+  (keys | sort) == (["as_of_height", "has_more", "items", "limit", "offset"] | sort) and
+  .limit == 3 and .offset == 0 and
+  (.has_more | type == "boolean") and
+  (.items | type == "array" and length > 0 and length <= 3)
+' "$work_dir/operations-first.json" >/dev/null
+
+request_json '/api/pumpologia/v1/operations?limit=3&offset=3' "$work_dir/operations-second.json"
+jq -e '
+  .limit == 3 and .offset == 3 and
+  (.has_more | type == "boolean") and
+  (.items | type == "array" and length <= 3)
+' "$work_dir/operations-second.json" >/dev/null
 
 request_json '/api/pumpologia/v1/btc-chart?timeframe=1h&limit=48' "$work_dir/chart.json"
 jq -e '

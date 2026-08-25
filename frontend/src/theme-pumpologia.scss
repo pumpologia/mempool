@@ -45,8 +45,14 @@ $quiet: #5e5e5a;
 $rule: #30302e;
 $rule-strong: #494946;
 $white: #ffffff;
-$success: #e9e9e3;
-$danger: #a7a7a1;
+$blue: #8faec9;
+$purple: #aa98c5;
+$green: #8fb69a;
+$yellow: #c5b275;
+$rose: #bd8c8a;
+$neutral: #a3a8ad;
+$success: $green;
+$danger: $rose;
 $link: #f2f2ed;
 $link-hover: #ffffff;
 
@@ -54,6 +60,24 @@ $link-hover: #ffffff;
   --font-editorial: "Pixel Operator", sans-serif;
   --font-interface: "Pixel Operator", sans-serif;
   --font-mono: "Pixel Operator Mono", monospace;
+
+  /*
+   * Quiet semantic accents: saturated enough to scan trading state quickly,
+   * restrained enough to preserve the monochrome journal character.
+   */
+  --pump-blue: #{$blue};
+  --pump-purple: #{$purple};
+  --pump-green: #{$green};
+  --pump-yellow: #{$yellow};
+  --pump-rose: #{$rose};
+  --pump-neutral: #{$neutral};
+  --pump-long: #{$blue};
+  --pump-short: #{$purple};
+  --pump-open: #{$green};
+  --pump-closed: #{$neutral};
+  --pump-positive: #{$green};
+  --pump-negative: #{$rose};
+  --pump-pending: #{$yellow};
 
   --bg: #{$ink};
   --active-bg: #000000;
@@ -74,7 +98,7 @@ $link-hover: #ffffff;
   --tertiary: #{$rule-strong};
   --success: #{$success};
   --danger: #{$danger};
-  --info: #c9c9c3;
+  --info: #{$blue};
   --link-color: #{$link};
   --link-hover-color: #{$link-hover};
   --icon: #d8d8d3;
@@ -113,13 +137,13 @@ $link-hover: #ffffff;
   --taproot: #{$paper};
   --taproot-light: #ffffff;
   --taproot-dark: #888884;
-  --green: #{$success};
-  --red: #{$danger};
-  --yellow: #d0d0ca;
+  --green: #{$green};
+  --red: #{$rose};
+  --yellow: #{$yellow};
   --grey: #777773;
   --tooltip-grey: #b5b5af;
   --orange: #{$paper};
-  --pink: #b8b8b2;
+  --pink: #{$purple};
 
   --search-button: #{$paper};
   --search-button-border: #{$paper};
@@ -169,7 +193,7 @@ samp,
 }
 
 html {
-  font-size: 16px;
+  font-size: 17px;
 }
 
 body {
@@ -198,6 +222,7 @@ h6,
 
 small,
 .small {
+  font-size: max(0.82rem, 13px);
   letter-spacing: 0.012em;
 }
 
@@ -267,7 +292,7 @@ a:hover {
   border-radius: 0.08rem !important;
   color: $paper !important;
   font-family: var(--font-interface);
-  font-size: 0.92rem;
+  font-size: 0.96rem;
 }
 
 .form-control::placeholder {
@@ -287,7 +312,7 @@ a:hover {
 .btn {
   border-radius: 0.08rem;
   font-family: var(--font-interface);
-  font-size: 0.86rem;
+  font-size: 0.9rem;
   font-weight: 400;
   letter-spacing: 0.045em;
   text-transform: uppercase;
@@ -340,6 +365,11 @@ a:hover {
   color: $ink !important;
 }
 
+.btn-info { background: $blue !important; border-color: $blue !important; }
+.btn-success { background: $green !important; border-color: $green !important; }
+.btn-danger { background: $rose !important; border-color: $rose !important; }
+.btn-warning { background: $yellow !important; border-color: $yellow !important; }
+
 .btn-outline-info {
   background: transparent;
   border-color: $rule-strong;
@@ -381,7 +411,7 @@ a:hover {
   border: 1px solid $rule;
   border-radius: 0.08rem;
   box-shadow: none;
-  font-size: 0.9rem;
+  font-size: 0.94rem;
 }
 
 .table {
@@ -390,7 +420,7 @@ a:hover {
   --bs-table-border-color: #{$rule};
   --bs-table-striped-bg: #151514;
   --bs-table-hover-bg: #1b1b1a;
-  font-size: 0.9rem;
+  font-size: 0.94rem;
 }
 
 .table > :not(caption) > * > * {
@@ -399,7 +429,7 @@ a:hover {
 
 .table th {
   color: $muted;
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   font-weight: 400;
   letter-spacing: 0.075em;
   text-transform: uppercase;
@@ -407,7 +437,7 @@ a:hover {
 
 .badge {
   border-radius: 999px;
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   font-weight: 400;
   letter-spacing: 0.045em;
 }
@@ -421,20 +451,15 @@ a:hover {
   color: $muted !important;
 }
 
-.text-success,
-.text-danger,
-.text-warning,
-.text-info {
-  color: $paper !important;
-}
+.text-success { color: $green !important; }
+.text-danger { color: $rose !important; }
+.text-warning { color: $yellow !important; }
+.text-info { color: $blue !important; }
 
-.bg-info,
-.bg-warning,
-.bg-success,
-.bg-danger {
-  background: $paper !important;
-  color: $ink !important;
-}
+.bg-info { background: $blue !important; color: $ink !important; }
+.bg-warning { background: $yellow !important; color: $ink !important; }
+.bg-success { background: $green !important; color: $ink !important; }
+.bg-danger { background: $rose !important; color: $ink !important; }
 
 .bg-light,
 .text-bg-light {
@@ -543,11 +568,11 @@ hr {
 .detail-panel { margin-top: 1rem; }
 .detail-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .detail-field { background: $surface; border: 1px solid $rule; border-radius: 0.08rem; display: flex; flex-direction: column; min-width: 0; padding: 1rem; }
-.detail-field span { color: $muted; font-size: 0.8rem; letter-spacing: 0.07em; text-transform: uppercase; }
-.detail-field strong { font-family: var(--font-mono) !important; font-size: 0.9rem; font-weight: 400; margin-top: 0.45rem; overflow-wrap: anywhere; }
+.detail-field span { color: $muted; font-size: 0.84rem; letter-spacing: 0.07em; text-transform: uppercase; }
+.detail-field strong { font-family: var(--font-mono) !important; font-size: 0.94rem; font-weight: 400; margin-top: 0.45rem; overflow-wrap: anywhere; }
 .detail-panel details { background: $surface; border: 1px solid $rule; border-radius: 0.08rem; margin-top: 1rem; padding: 1rem; }
-.detail-panel summary { cursor: pointer; font-size: 0.86rem; font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; }
-.detail-panel pre { background: #050505; border: 1px solid $rule; border-radius: 0; color: $paper; font-size: 0.82rem; margin: 1rem 0 0; max-height: 70vh; overflow: auto; padding: 1rem; }
+.detail-panel summary { cursor: pointer; font-size: 0.9rem; font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; }
+.detail-panel pre { background: #050505; border: 1px solid $rule; border-radius: 0; color: $paper; font-size: 0.86rem; margin: 1rem 0 0; max-height: 70vh; overflow: auto; padding: 1rem; }
 
 @media (max-width: 991.98px) {
   .methodology { grid-template-columns: 1fr; }
@@ -555,7 +580,7 @@ hr {
 }
 
 @media (max-width: 575.98px) {
-  html { font-size: 15.5px; }
+  html { font-size: 16px; }
   body { background-size: 56px 56px; }
   .detail-grid { grid-template-columns: 1fr; }
 }
