@@ -2,7 +2,7 @@ import { FastVertexArray } from '@components/block-overview-graph/fast-vertex-ar
 import TxView from '@components/block-overview-graph/tx-view';
 import { TransactionStripped } from '@interfaces/node-api.interface';
 import { Color, Position, Square, ViewUpdateParams } from '@components/block-overview-graph/sprite-types';
-import { defaultColorFunction, contrastColorFunction } from '@components/block-overview-graph/utils';
+import { defaultColorFunction, contrastColorFunction, pumpologiaColorFunction } from '@components/block-overview-graph/utils';
 import { ThemeService } from '@app/services/theme.service';
 
 export default class BlockScene {
@@ -69,7 +69,13 @@ export default class BlockScene {
   }
 
   setColorFunction(colorFunction: ((tx: TxView) => Color) | null): void {
-    this.theme.theme === 'contrast' || this.theme.theme === 'bukele' ? this.getColor = colorFunction || contrastColorFunction : this.getColor = colorFunction || defaultColorFunction;
+    if (this.theme.theme === 'pumpologia') {
+      this.getColor = colorFunction || pumpologiaColorFunction;
+    } else if (this.theme.theme === 'contrast' || this.theme.theme === 'bukele') {
+      this.getColor = colorFunction || contrastColorFunction;
+    } else {
+      this.getColor = colorFunction || defaultColorFunction;
+    }
     this.updateAllColors();
   }
 
@@ -249,7 +255,13 @@ export default class BlockScene {
     this.flip = flip;
     this.vertexArray = vertexArray;
     this.highlightingEnabled = highlighting;
-    theme.theme === 'contrast' || theme.theme === 'bukele' ? this.getColor = colorFunction || contrastColorFunction : this.getColor = colorFunction || defaultColorFunction;
+    if (theme.theme === 'pumpologia') {
+      this.getColor = colorFunction || pumpologiaColorFunction;
+    } else if (theme.theme === 'contrast' || theme.theme === 'bukele') {
+      this.getColor = colorFunction || contrastColorFunction;
+    } else {
+      this.getColor = colorFunction || defaultColorFunction;
+    }
     this.theme = theme;
 
     this.scene = {

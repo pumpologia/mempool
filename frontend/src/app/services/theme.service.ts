@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { defaultMempoolFeeColors, contrastMempoolFeeColors, lightMempoolFeeColors } from '@app/app.constants';
+import { defaultMempoolFeeColors, contrastMempoolFeeColors, lightMempoolFeeColors, pumpologiaMempoolFeeColors } from '@app/app.constants';
 import { StorageService } from '@app/services/storage.service';
 import { StateService } from '@app/services/state.service';
 
@@ -126,8 +126,9 @@ export class ThemeService {
       case 'bukele':
         return contrastMempoolFeeColors;
       case 'nymkappa':
-      case 'pumpologia':
         return lightMempoolFeeColors;
+      case 'pumpologia':
+        return pumpologiaMempoolFeeColors;
       default:
         return defaultMempoolFeeColors;
     }

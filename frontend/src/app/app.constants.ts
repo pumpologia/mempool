@@ -40,6 +40,15 @@ export const defaultMempoolFeeColors = [
   'ae005b',
 ];
 
+// Pumpologia keeps fee-rate information legible without introducing a color
+// spectrum: low-priority transactions are graphite and high-priority ones
+// approach paper white.
+export const pumpologiaMempoolFeeColors = defaultMempoolFeeColors.map((_, index) => {
+  const shade = Math.round(72 + (166 * index / (defaultMempoolFeeColors.length - 1)));
+  const channel = shade.toString(16).padStart(2, '0');
+  return `${channel}${channel}${channel}`;
+});
+
 export const contrastMempoolFeeColors = [
   '06adef',
   '0082e6',

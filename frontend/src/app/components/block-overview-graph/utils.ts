@@ -1,4 +1,4 @@
-import { feeLevels, defaultMempoolFeeColors, contrastMempoolFeeColors } from '@app/app.constants';
+import { feeLevels, defaultMempoolFeeColors, contrastMempoolFeeColors, pumpologiaMempoolFeeColors } from '@app/app.constants';
 import { Color } from '@components/block-overview-graph/sprite-types';
 import TxView from '@components/block-overview-graph/tx-view';
 
@@ -122,6 +122,37 @@ export const contrastAuditColors = {
   accelerated: hexToColor('8f5ff6'),
 };
 
+const pumpologiaColors: { [key: string]: ColorPalette } = {
+  fee: {
+    base: pumpologiaMempoolFeeColors.map(hexToColor),
+    audit: [],
+    marginal: [],
+    baseLevel: (tx: TxView, rate: number) => feeLevels.findIndex((feeLvl) => Math.max(0, rate) < feeLvl) - 1
+  },
+};
+for (const key in pumpologiaColors) {
+  const base = pumpologiaColors[key].base;
+  pumpologiaColors[key].audit = base.map((color) => darken(color, 0.82));
+  pumpologiaColors[key].marginal = base.map((color) => darken(color, 0.64));
+  pumpologiaColors['unmatched' + key] = {
+    base: pumpologiaColors[key].base.map(c => setOpacity(c, 0.2)),
+    audit: pumpologiaColors[key].audit.map(c => setOpacity(c, 0.2)),
+    marginal: pumpologiaColors[key].marginal.map(c => setOpacity(c, 0.2)),
+    baseLevel: pumpologiaColors[key].baseLevel,
+  };
+}
+
+export { pumpologiaColors as pumpologiaColors };
+
+export const pumpologiaAuditColors = {
+  censored: hexToColor('f2f2ed'),
+  missing: hexToColor('9a9a95'),
+  added: hexToColor('d8d8d2'),
+  added_prioritized: hexToColor('c2c2bd'),
+  prioritized: hexToColor('adada8'),
+  accelerated: hexToColor('ffffff'),
+};
+
 export function defaultColorFunction(
   tx: TxView,
   colors: { base: Color[], audit: Color[], marginal: Color[], baseLevel: (tx: TxView, rate: number, time: number) => number } = defaultColors.fee,
@@ -190,6 +221,15 @@ export function contrastColorFunction(
   tx: TxView,
   colors: { base: Color[], audit: Color[], marginal: Color[], baseLevel: (tx: TxView, rate: number, time: number) => number } = contrastColors.fee,
   auditColors: { [status: string]: Color } = contrastAuditColors,
+  relativeTime?: number,
+): Color {
+  return defaultColorFunction(tx, colors, auditColors, relativeTime);
+}
+
+export function pumpologiaColorFunction(
+  tx: TxView,
+  colors: { base: Color[], audit: Color[], marginal: Color[], baseLevel: (tx: TxView, rate: number, time: number) => number } = pumpologiaColors.fee,
+  auditColors: { [status: string]: Color } = pumpologiaAuditColors,
   relativeTime?: number,
 ): Color {
   return defaultColorFunction(tx, colors, auditColors, relativeTime);

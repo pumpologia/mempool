@@ -9,7 +9,7 @@ import { Price } from '@app/services/price.service';
 import { StateService } from '@app/services/state.service';
 import { ThemeService } from '@app/services/theme.service';
 import { Subscription } from 'rxjs';
-import { defaultColorFunction, setOpacity, defaultAuditColors, defaultColors, ageColorFunction, contrastColorFunction, contrastAuditColors, contrastColors } from '@components/block-overview-graph/utils';
+import { defaultColorFunction, setOpacity, defaultAuditColors, defaultColors, ageColorFunction, contrastColorFunction, contrastAuditColors, contrastColors, pumpologiaColorFunction, pumpologiaAuditColors, pumpologiaColors } from '@components/block-overview-graph/utils';
 import { ActiveFilter, FilterMode, toFlags } from '@app/shared/filters.utils';
 import { detectWebGL } from '@app/shared/graphs.utils';
 
@@ -29,6 +29,14 @@ const unmatchedContrastAuditColors = {
   added_prioritized: setOpacity(contrastAuditColors.added_prioritized, unmatchedOpacity),
   prioritized: setOpacity(contrastAuditColors.prioritized, unmatchedOpacity),
   accelerated: setOpacity(contrastAuditColors.accelerated, unmatchedOpacity),
+};
+const unmatchedPumpologiaAuditColors = {
+  censored: setOpacity(pumpologiaAuditColors.censored, unmatchedOpacity),
+  missing: setOpacity(pumpologiaAuditColors.missing, unmatchedOpacity),
+  added: setOpacity(pumpologiaAuditColors.added, unmatchedOpacity),
+  added_prioritized: setOpacity(pumpologiaAuditColors.added_prioritized, unmatchedOpacity),
+  prioritized: setOpacity(pumpologiaAuditColors.prioritized, unmatchedOpacity),
+  accelerated: setOpacity(pumpologiaAuditColors.accelerated, unmatchedOpacity),
 };
 
 @Component({
@@ -675,24 +683,33 @@ export class BlockOverviewGraphComponent implements AfterViewInit, OnDestroy, On
           break;
       }
       if (matches) {
-        if (this.loadedTheme !== 'contrast' && this.loadedTheme !== 'bukele') {
-          return (gradient === 'age') ? ageColorFunction(tx, defaultColors.fee, defaultAuditColors, this.relativeTime || (Date.now() / 1000)) : defaultColorFunction(tx, defaultColors.fee, defaultAuditColors, this.relativeTime || (Date.now() / 1000));
-        } else {
+        if (this.loadedTheme === 'pumpologia') {
+          return (gradient === 'age') ? ageColorFunction(tx, pumpologiaColors.fee, pumpologiaAuditColors, this.relativeTime || (Date.now() / 1000), 'pumpologia') : pumpologiaColorFunction(tx, pumpologiaColors.fee, pumpologiaAuditColors, this.relativeTime || (Date.now() / 1000));
+        } else if (this.loadedTheme === 'contrast' || this.loadedTheme === 'bukele') {
           return (gradient === 'age') ? ageColorFunction(tx, contrastColors.fee, contrastAuditColors, this.relativeTime || (Date.now() / 1000)) : contrastColorFunction(tx, contrastColors.fee, contrastAuditColors, this.relativeTime || (Date.now() / 1000));
+        } else {
+          return (gradient === 'age') ? ageColorFunction(tx, defaultColors.fee, defaultAuditColors, this.relativeTime || (Date.now() / 1000)) : defaultColorFunction(tx, defaultColors.fee, defaultAuditColors, this.relativeTime || (Date.now() / 1000));
         }
       } else {
-        if (this.loadedTheme !== 'contrast' && this.loadedTheme !== 'bukele') {
-          return (gradient === 'age') ? { r: 1, g: 1, b: 1, a: 0.05 } : defaultColorFunction(
+        if (this.loadedTheme === 'pumpologia') {
+          return (gradient === 'age') ? { r: 1, g: 1, b: 1, a: 0.05 } : pumpologiaColorFunction(
             tx,
-            defaultColors.unmatchedfee,
-            unmatchedAuditColors,
+            pumpologiaColors.unmatchedfee,
+            unmatchedPumpologiaAuditColors,
             this.relativeTime || (Date.now() / 1000)
           );
-        } else {
+        } else if (this.loadedTheme === 'contrast' || this.loadedTheme === 'bukele') {
           return (gradient === 'age') ? { r: 1, g: 1, b: 1, a: 0.05 } : contrastColorFunction(
             tx,
             contrastColors.unmatchedfee,
             unmatchedContrastAuditColors,
+            this.relativeTime || (Date.now() / 1000)
+          );
+        } else {
+          return (gradient === 'age') ? { r: 1, g: 1, b: 1, a: 0.05 } : defaultColorFunction(
+            tx,
+            defaultColors.unmatchedfee,
+            unmatchedAuditColors,
             this.relativeTime || (Date.now() / 1000)
           );
         }

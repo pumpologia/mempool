@@ -5,6 +5,7 @@ import { StorageService } from '@app/services/storage.service';
 import { download, formatterXAxis, formatterXAxisLabel } from '@app/shared/graphs.utils';
 import { formatNumber } from '@angular/common';
 import { StateService } from '@app/services/state.service';
+import { ThemeService } from '@app/services/theme.service';
 import { Subscription } from 'rxjs';
 
 const OUTLIERS_MEDIAN_MULTIPLIER = 4;
@@ -51,6 +52,7 @@ export class IncomingTransactionsGraphComponent implements OnInit, OnChanges, On
     @Inject(LOCALE_ID) private locale: string,
     private storageService: StorageService,
     public stateService: StateService,
+    private themeService: ThemeService,
   ) { }
 
   ngOnInit() {
@@ -124,6 +126,10 @@ export class IncomingTransactionsGraphComponent implements OnInit, OnChanges, On
   }
 
   mountChart(): void {
+    const trafficPalette = this.themeService.theme === 'pumpologia'
+      ? ['#6b6b67', '#858581', '#9e9e99', '#b7b7b1', '#d0d0ca', '#f2f2ed']
+      : ['#7CB342', '#FDD835', '#FFB300', '#FB8C00', '#F4511E', '#D81B60'];
+
     //create an array for the echart series
     //similar to how it is done in mempool-graph.component.ts
     const seriesGraph = [];
@@ -294,31 +300,31 @@ export class IncomingTransactionsGraphComponent implements OnInit, OnChanges, On
         pieces: [{
           gt: 0,
           lte: 1667,
-          color: '#7CB342'
+          color: trafficPalette[0]
         },
         {
           gt: 1667,
           lte: 2000,
-          color: '#FDD835'
+          color: trafficPalette[1]
         },
         {
           gt: 2000,
           lte: 2500,
-          color: '#FFB300'
+          color: trafficPalette[2]
         },
         {
           gt: 2500,
           lte: 3000,
-          color: '#FB8C00'
+          color: trafficPalette[3]
         },
         {
           gt: 3000,
           lte: 3500,
-          color: '#F4511E'
+          color: trafficPalette[4]
         },
         {
           gt: 3500,
-          color: '#D81B60'
+          color: trafficPalette[5]
         }],
         outOfRange: {
           color: '#999'

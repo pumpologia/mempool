@@ -368,6 +368,26 @@ a:hover {
   background: $paper;
 }
 
+.dashboard-container .progress-bar,
+app-custom-dashboard .progress-bar,
+app-footer .progress-bar {
+  background-color: $paper !important;
+  color: $ink !important;
+}
+
+.dashboard-container .bg-success,
+.dashboard-container .bg-warning,
+.dashboard-container .bg-danger,
+app-custom-dashboard .bg-success,
+app-custom-dashboard .bg-warning,
+app-custom-dashboard .bg-danger,
+app-footer .bg-success,
+app-footer .bg-warning,
+app-footer .bg-danger {
+  background-color: $paper !important;
+  color: $ink !important;
+}
+
 hr {
   border-color: $rule;
   opacity: 1;
