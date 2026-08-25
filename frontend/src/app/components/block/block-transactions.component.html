@@ -1,9 +1,13 @@
 <div #blockTxTitle id="block-tx-title" class="block-tx-title">
-  <h2 class="text-start">
-    <ng-container *ngTemplateOutlet="txCount === 1 ? transactionsSingular : transactionsPlural; context: {$implicit: txCount | number}"></ng-container>
-    <ng-template #transactionsSingular let-i i18n="shared.transaction-count.singular">{{ i }} transaction</ng-template>
-    <ng-template #transactionsPlural let-i i18n="shared.transaction-count.plural">{{ i }} transactions</ng-template>
-  </h2>
+  <div class="transaction-heading text-start">
+    <span>Complete Bitcoin record</span>
+    <h2>
+      <ng-container *ngTemplateOutlet="txCount === 1 ? transactionsSingular : transactionsPlural; context: {$implicit: txCount | number}"></ng-container>
+      <ng-template #transactionsSingular let-i i18n="shared.transaction-count.singular">{{ i }} transaction</ng-template>
+      <ng-template #transactionsPlural let-i i18n="shared.transaction-count.plural">{{ i }} transactions</ng-template>
+    </h2>
+    <small>{{ itemsPerPage }} per page · next page prepared in background</small>
+  </div>
   <ngb-pagination class="pagination-container float-end" [collectionSize]="txCount" [rotate]="true" [pageSize]="itemsPerPage" [(page)]="page" (pageChange)="pageChange(page, blockTxTitle)" [maxSize]="paginationMaxSize" [boundaryLinks]="true" [ellipses]="false"></ngb-pagination>
 </div>
 <div class="clearfix"></div>

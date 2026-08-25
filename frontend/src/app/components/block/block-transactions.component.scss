@@ -12,10 +12,34 @@
     line-height: 1;
     margin: 0;
     position: relative;
-    padding-bottom: 10px;
+    padding-bottom: 0;
     @media (min-width: 550px) {
-      padding-bottom: 0px;
       align-self: end;
+    }
+  }
+
+  .transaction-heading {
+    padding-bottom: 10px;
+
+    > span {
+      color: var(--transparent-fg);
+      display: block;
+      font-size: .6rem;
+      letter-spacing: .1em;
+      margin-bottom: .35rem;
+      text-transform: uppercase;
+    }
+
+    small {
+      color: var(--transparent-fg);
+      display: block;
+      font-size: .62rem;
+      letter-spacing: .025em;
+      margin-top: .4rem;
+    }
+
+    @media (min-width: 550px) {
+      padding-bottom: 0;
     }
   }
 }

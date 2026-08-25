@@ -1,23 +1,38 @@
 /*
- * Pumpologia editorial theme
- * Boska Medium + Switzer Regular, served by Fontshare.
- * The near-black paper, hairline rules and compact type intentionally echo a
- * financial logbook while leaving every upstream Mempool component intact.
+ * Pumpologia monochrome terminal theme.
+ * Pixel Operator is bundled locally under its CC0 1.0 licence so the UI never
+ * depends on a third-party font CDN at runtime.
  */
 @font-face {
   font-display: swap;
-  font-family: "Boska";
+  font-family: "Pixel Operator";
   font-style: normal;
-  font-weight: 500;
-  src: url("https://cdn.fontshare.com/wf/CNIAHX5RKVK53N3YCRZR5R3L3S4OTBSU/DBNFGKYNM3IIQU3Q4SC6XOOFS6UMAW7D/DCZMHDUIIND3BTWZGHAVWGQPO6EB5M4I.woff2") format("woff2");
+  font-weight: 400;
+  src: url("/resources/fonts/pixel-operator/PixelOperator.ttf") format("truetype");
 }
 
 @font-face {
   font-display: swap;
-  font-family: "Switzer";
+  font-family: "Pixel Operator";
+  font-style: normal;
+  font-weight: 700;
+  src: url("/resources/fonts/pixel-operator/PixelOperator-Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Pixel Operator Mono";
   font-style: normal;
   font-weight: 400;
-  src: url("https://cdn.fontshare.com/wf/BLNB4FAQFNK56DWWNF7PMGTCOTZHOEII/ST3WKSSDMBK2MIQQO3MAVYWLF4FTOLFV/6IN5WOLRCYP4G4MOCOHOMXNON6Q7MDAR.woff2") format("woff2");
+  src: url("/resources/fonts/pixel-operator/PixelOperatorMono.ttf") format("truetype");
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Pixel Operator Mono";
+  font-style: normal;
+  font-weight: 700;
+  src: url("/resources/fonts/pixel-operator/PixelOperatorMono-Bold.ttf") format("truetype");
 }
 
 $ink: #0d0d0d;
@@ -36,8 +51,9 @@ $link: #f2f2ed;
 $link-hover: #ffffff;
 
 :root {
-  --font-editorial: "Boska", Georgia, "Times New Roman", serif;
-  --font-interface: "Switzer", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-editorial: "Pixel Operator", sans-serif;
+  --font-interface: "Pixel Operator", sans-serif;
+  --font-mono: "Pixel Operator Mono", monospace;
 
   --bg: #{$ink};
   --active-bg: #000000;
@@ -48,9 +64,14 @@ $link-hover: #ffffff;
   --nav-shadow: rgba(0, 0, 0, 0.5);
   --title-fg: #{$white};
 
-  --primary: #{$paper};
+  /*
+   * Upstream Mempool components generally place white text on the primary and
+   * tertiary colours. Keep those tokens as dark surfaces; paper actions are
+   * styled explicitly below so every inherited component keeps its contrast.
+   */
+  --primary: #{$quiet};
   --secondary: #20201f;
-  --tertiary: #{$white};
+  --tertiary: #{$rule-strong};
   --success: #{$success};
   --danger: #{$danger};
   --info: #c9c9c3;
@@ -83,7 +104,7 @@ $link-hover: #ffffff;
   --regtest: #383836;
   --liquid: #62625e;
   --liquidtestnet: #383836;
-  --mainnet-alt: #deded8;
+  --mainnet-alt: #444442;
   --testnet-alt: #a0a09b;
   --signet-alt: #858581;
   --regtest-alt: #6a6a66;
@@ -130,6 +151,23 @@ body {
   font-family: var(--font-interface);
 }
 
+/*
+ * Several inherited explorer components declare their own legacy font stack.
+ * Scope this override to document content while preserving icon-font classes.
+ */
+body,
+body :where(*:not(.fa):not(.glyphicon)) {
+  font-family: var(--font-interface) !important;
+}
+
+code,
+pre,
+kbd,
+samp,
+.font-monospace {
+  font-family: var(--font-mono) !important;
+}
+
 html {
   font-size: 14px;
 }
@@ -153,8 +191,8 @@ h6,
 .card-title {
   color: $white;
   font-family: var(--font-editorial);
-  font-weight: 500;
-  letter-spacing: -0.035em;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
 }
 
 small,
@@ -189,6 +227,7 @@ a:hover {
 }
 
 .nav-item.active {
+  --nav-icon: #{$ink};
   background: $paper !important;
   border-radius: 0.08rem;
   color: $ink !important;
@@ -255,17 +294,61 @@ a:hover {
 
 .btn-purple,
 .btn-primary {
-  background: $paper;
-  border-color: $paper;
-  color: $ink;
+  --bs-btn-bg: #{$paper};
+  --bs-btn-border-color: #{$paper};
+  --bs-btn-color: #{$ink};
+  --bs-btn-hover-bg: #{$white};
+  --bs-btn-hover-border-color: #{$white};
+  --bs-btn-hover-color: #{$ink};
+  --bs-btn-active-bg: #{$white};
+  --bs-btn-active-border-color: #{$white};
+  --bs-btn-active-color: #{$ink};
+  --bs-btn-disabled-bg: #{$paper};
+  --bs-btn-disabled-border-color: #{$paper};
+  --bs-btn-disabled-color: #{$ink};
+  background: $paper !important;
+  border-color: $paper !important;
+  color: $ink !important;
 }
 
 .btn-purple:hover,
 .btn-purple:focus,
 .btn-primary:hover,
 .btn-primary:focus {
-  background: $white;
-  border-color: $white;
+  background: $white !important;
+  border-color: $white !important;
+  color: $ink !important;
+}
+
+.search-submit,
+.search-submit fa-icon,
+.search-submit svg {
+  color: $ink !important;
+  fill: $ink !important;
+}
+
+.btn-info,
+.btn-light,
+.btn-outline-info.active,
+.btn-outline-info:active,
+.btn-success,
+.btn-danger,
+.btn-warning {
+  background: $paper !important;
+  border-color: $paper !important;
+  color: $ink !important;
+}
+
+.btn-outline-info {
+  background: transparent;
+  border-color: $rule-strong;
+  color: $paper;
+}
+
+.btn-outline-info:hover,
+.btn-outline-info:focus {
+  background: $paper;
+  border-color: $paper;
   color: $ink;
 }
 
@@ -352,6 +435,45 @@ a:hover {
   color: $ink !important;
 }
 
+.bg-light,
+.text-bg-light {
+  background: $paper !important;
+  color: $ink !important;
+}
+
+.bg-primary,
+.text-bg-primary {
+  background: $quiet !important;
+  color: $paper !important;
+}
+
+.pagination-container {
+  .page-link {
+    background: $ink;
+    border-color: $ink;
+    color: $paper;
+  }
+
+  .page-link:hover,
+  .page-link:focus {
+    background: $surface-hover;
+    border-color: $rule-strong;
+    color: $white;
+  }
+
+  .page-item.active .page-link {
+    background: $paper !important;
+    border-color: $paper !important;
+    color: $ink !important;
+  }
+
+  .page-item.disabled .page-link {
+    background: $ink;
+    border-color: $ink;
+    color: $quiet;
+  }
+}
+
 .alert {
   background: $surface-raised;
   border-color: $rule-strong;
@@ -421,7 +543,7 @@ hr {
 .detail-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .detail-field { background: $surface; border: 1px solid $rule; border-radius: 0.08rem; display: flex; flex-direction: column; min-width: 0; padding: 1rem; }
 .detail-field span { color: $muted; font-size: 0.64rem; letter-spacing: 0.07em; text-transform: uppercase; }
-.detail-field strong { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.74rem; font-weight: 400; margin-top: 0.45rem; overflow-wrap: anywhere; }
+.detail-field strong { font-family: var(--font-mono) !important; font-size: 0.74rem; font-weight: 400; margin-top: 0.45rem; overflow-wrap: anywhere; }
 .detail-panel details { background: $surface; border: 1px solid $rule; border-radius: 0.08rem; margin-top: 1rem; padding: 1rem; }
 .detail-panel summary { cursor: pointer; font-size: 0.72rem; font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; }
 .detail-panel pre { background: #050505; border: 1px solid $rule; border-radius: 0; color: $paper; font-size: 0.68rem; margin: 1rem 0 0; max-height: 70vh; overflow: auto; padding: 1rem; }

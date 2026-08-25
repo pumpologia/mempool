@@ -1,7 +1,5 @@
 <div class="container-xl" (window:resize)="onResize($event)">
 
-  <app-pumpologia-context *ngIf="network === '' && blockHeight != null" [blockHeight]="blockHeight"></app-pumpologia-context>
-
   <div class="title-block" [class.time-ltr]="timeLtr" id="block">
     <div *ngIf="block?.stale" class="alert alert-mempool" role="alert">
       <span i18n="block.reorged|Block reorg" class="alert-text">This block does not belong to the main chain, it has been replaced by:</span>
@@ -416,6 +414,8 @@
       >Details</button>
     </div>
 
+    <app-pumpologia-context *ngIf="network === '' && blockHeight != null" [blockHeight]="blockHeight"></app-pumpologia-context>
+
     @defer (on viewport) {
       @if (!block?.stale) {
       <app-block-transactions [paginationMaxSize]="paginationMaxSize" [block$]="block$" [txCount]="block.tx_count" [timestamp]="block.timestamp" [blockHash]="blockHash" [previousBlockHash]="block.previousblockhash" (blockReward)="updateBlockReward($event)"></app-block-transactions>
@@ -428,7 +428,7 @@
             <ng-template #transactionsSingular let-i i18n="shared.transaction-count.singular">{{ i }} transaction</ng-template>
             <ng-template #transactionsPlural let-i i18n="shared.transaction-count.plural">{{ i }} transactions</ng-template>
           </h2>
-          <ngb-pagination class="pagination-container float-end" [disabled]="true" [collectionSize]="block.tx_count" [rotate]="true" [pageSize]="stateService.env.ITEMS_PER_PAGE" [maxSize]="paginationMaxSize" [boundaryLinks]="true" [ellipses]="false"></ngb-pagination>
+          <ngb-pagination class="pagination-container float-end" [disabled]="true" [collectionSize]="block.tx_count" [rotate]="true" [pageSize]="10" [maxSize]="paginationMaxSize" [boundaryLinks]="true" [ellipses]="false"></ngb-pagination>
         </div>
         <div class="clearfix"></div>
         <div class="tx-skeleton">

@@ -30,6 +30,7 @@ const BLOCK_HASH_REGEX = /^[a-f0-9]{64}$/i;
 const ADDRESS_REGEX = /^[a-z0-9]{2,120}$/i;
 const SCRIPT_HASH_REGEX = /^([a-f0-9]{2})+$/i;
 const MAX_TRANSACTION_TIMES = 100;
+const BLOCK_TRANSACTIONS_PAGE_SIZE = 10;
 const JUST_NUMBERS_REGEX = /^[1-9]\d*$/;
 
 class BitcoinRoutes {
@@ -700,19 +701,28 @@ class BitcoinRoutes {
       loadingIndicators.setProgress('blocktxs-' + req.params.hash, 0);
 
       const txIds = await bitcoinApi.$getTxIdsForBlock(req.params.hash);
-      const transactions: TransactionExtended[] = [];
-      const startingIndex = Math.max(0, parseInt(req.params.index || '0', 10));
+      const parsedIndex = parseInt(req.params.index || '0', 10);
+      const startingIndex = Number.isSafeInteger(parsedIndex) ? Math.max(0, parsedIndex) : 0;
+      const endIndex = Math.min(startingIndex + BLOCK_TRANSACTIONS_PAGE_SIZE, txIds.length);
+      let completed = 0;
 
-      const endIndex = Math.min(startingIndex + 10, txIds.length);
-      for (let i = startingIndex; i < endIndex; i++) {
+      const pageTransactions = await Promise.all(txIds.slice(startingIndex, endIndex).map(async (txid) => {
         try {
-          const transaction = await transactionUtils.$getTransactionExtended(txIds[i], true, true);
-          transactions.push(transaction);
-          loadingIndicators.setProgress('blocktxs-' + req.params.hash, (i - startingIndex + 1) / (endIndex - startingIndex) * 100);
+          return await transactionUtils.$getTransactionExtended(txid, true, true);
         } catch (e) {
           logger.debug('getBlockTransactions error: ' + (e instanceof Error ? e.message : e));
+          return null;
+        } finally {
+          completed++;
+          loadingIndicators.setProgress(
+            'blocktxs-' + req.params.hash,
+            endIndex > startingIndex ? completed / (endIndex - startingIndex) * 100 : 100,
+          );
         }
-      }
+      }));
+      const transactions = pageTransactions.filter((transaction): transaction is TransactionExtended => transaction !== null);
+
+      res.setHeader('Cache-Control', 'public, max-age=60, immutable');
       res.json(transactions);
     } catch (e) {
       loadingIndicators.setProgress('blocktxs-' + req.params.hash, 100);
