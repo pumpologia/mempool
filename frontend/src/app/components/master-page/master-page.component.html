@@ -1,5 +1,5 @@
 <ng-container *ngIf="{ val: network$ | async } as network">
-<header *ngIf="headerVisible" class="sticky-header">
+<header *ngIf="headerVisible" class="sticky-header" (window:resize)="onResize()">
 
   <nav class="navbar navbar-expand-md navbar-dark">
   <!-- Hamburger -->
@@ -18,7 +18,7 @@
   </ng-container>
 
   <!-- Large screen -->
-  <a class="navbar-brand d-none d-md-flex" [ngClass]="{'dual-logos': enterpriseInfo?.dualLogo}" [routerLink]="['/' | relativeUrl]" (click)="brandClick($event)">
+  <a class="navbar-brand d-none d-lg-flex" [ngClass]="{'dual-logos': enterpriseInfo?.dualLogo}" [routerLink]="['/' | relativeUrl]" (click)="brandClick($event)">
     <ng-container *ngIf="{ val: connectionState$ | async } as connectionState">
       @if (enterpriseInfo) {
         <div class="subdomain_container">
@@ -40,7 +40,7 @@
     </ng-container>
   </a>
   <!-- Mobile -->
-  <a class="navbar-brand d-flex d-md-none justify-content-center" [ngClass]="{'dual-logos': enterpriseInfo?.dualLogo, 'me-0': enterpriseInfo?.dualLogo}" [routerLink]="['/' | relativeUrl]" (click)="brandClick($event)">
+  <a class="navbar-brand d-flex d-lg-none justify-content-center" [ngClass]="{'dual-logos': enterpriseInfo?.dualLogo, 'me-0': enterpriseInfo?.dualLogo}" [routerLink]="['/' | relativeUrl]" (click)="brandClick($event)">
     <ng-container *ngIf="{ val: connectionState$ | async } as connectionState">
       @if (enterpriseInfo) {
         <div class="subdomain_container">
@@ -62,7 +62,21 @@
     </ng-container>
   </a>
 
-  <div (window:resize)="onResize()" ngbDropdown class="dropdown-container" *ngIf="isDropdownVisible">
+  <button
+    type="button"
+    class="mobile-nav-toggle d-lg-none"
+    [class.open]="navCollapsed"
+    [attr.aria-expanded]="navCollapsed"
+    aria-controls="navbarCollapse"
+    [attr.aria-label]="navCollapsed ? 'Close navigation menu' : 'Open navigation menu'"
+    (click)="toggleNavigation()"
+  >
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <div ngbDropdown class="dropdown-container" *ngIf="isDropdownVisible">
     <button ngbDropdownToggle type="button" class="btn btn-secondary dropdown-toggle-split d-flex justify-content-center align-items-center" aria-haspopup="true" [attr.aria-label]="'Select network. Current: ' + networkDisplayName" [attr.title]="'Select network. Current: ' + networkDisplayName">
       <app-svg-images class="d-flex justify-content-center align-items-center current-network-svg" [name]="network.val === '' ? 'bitcoin' : network.val" width="20" height="20" viewBox="0 0 65 65"></app-svg-images>
     </button>
@@ -77,69 +91,80 @@
     </div>
   </div>
 
-  <div class="navbar-collapse" id="navbarCollapse">
+  <div class="navbar-collapse" [class.mobile-open]="navCollapsed" id="navbarCollapse">
     <ul class="navbar-nav {{ network.val }}">
 
       <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-home">
         <a class="nav-link" [routerLink]="['/' | relativeUrl]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-tachometer" width="21.59" height="100%"></app-svg-images></div>
+          <span class="mobile-nav-label">Home</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-home" *ngIf="network.val === '' && stateService.env.ACCELERATOR">
         <a class="nav-link" [routerLink]="['/acceleration' | relativeUrl]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-rocket" width="21.59" height="100%"></app-svg-images></div>
+          <span class="mobile-nav-label">Accelerator</span>
         </a>
       </li>
       <li class="nav-item mining" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-pools" *ngIf="stateService.env.MINING_DASHBOARD">
         <a class="nav-link" [routerLink]="['/mining' | relativeUrl]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-pickaxe" width="21.59" height="100%"></app-svg-images></div>
+          <span class="mobile-nav-label">Mining</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-lightning" *ngIf="stateService.networkSupportsLightning()">
         <a class="nav-link" [routerLink]="['/lightning' | relativeUrl]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-bolt" width="21.59" height="100%"></app-svg-images></div>
+          <span class="mobile-nav-label">Lightning</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-blocks" *ngIf="!stateService.env.MINING_DASHBOARD">
         <a class="nav-link" [routerLink]="['/blocks' | relativeUrl]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-cubes" width="21.59" height="100%"></app-svg-images></div>
+          <span class="mobile-nav-label">Blocks</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-graphs">
         <a class="nav-link" [routerLink]="['/graphs' | relativeUrl]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-chart-area" width="21.59" height="100%"></app-svg-images></div>
+          <span class="mobile-nav-label">Graphs</span>
         </a>
       </li>
       <li class="nav-item pumpologia-nav" routerLinkActive="active" id="btn-protocol">
         <a class="nav-link" [routerLink]="['/protocol' | relativeUrl]" (click)="collapse()" title="Pumpologia Protocol" aria-label="Pumpologia Protocol">
           <div class="svg-wrapper"><app-svg-images name="nav-cubes" width="21.59" height="100%"></app-svg-images></div>
-          <span class="pumpologia-nav-label">Protocol</span>
+          <span class="mobile-nav-label">Protocol</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-faucet" *ngIf="stateService.isMempoolSpaceBuild && stateService.env.OFFICIAL_MEMPOOL_SPACE && stateService.network === 'testnet4'">
         <a class="nav-link" [routerLink]="['/faucet' | relativeUrl]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-faucet-drip" width="21.59" height="100%"></app-svg-images></div>
+          <span class="mobile-nav-label">Faucet</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-docs" *ngIf="!officialMempoolSpaceBuild">
         <a class="nav-link" [routerLink]="['/docs' | relativeUrl ]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-book" width="21.59" height="100%"></app-svg-images></div>
+          <span class="mobile-nav-label">Docs</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-enterprise" *ngIf="officialMempoolSpaceBuild">
         <a class="nav-link" [routerLink]="['/enterprise']" [queryParams]="{network: network.val.length ? network.val : null}" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-enterprise" width="21.59" height="100%"></app-svg-images></div>
+          <span class="mobile-nav-label">Enterprise</span>
         </a>
       </li>
       <li class="nav-item" routerLinkActive="active" id="btn-about">
         <a class="nav-link" [routerLink]="['/about']" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-info-circle" width="21.59" height="100%"></app-svg-images></div>
+          <span class="mobile-nav-label">About</span>
         </a>
       </li>
     </ul>
     <app-search-form [hamburgerOpen]="enterpriseInfo === null && user != null" class="search-form-container" location="top" (searchTriggered)="collapse()"></app-search-form>
   </div>
 </nav>
+<button *ngIf="navCollapsed" type="button" class="mobile-nav-backdrop d-lg-none" aria-label="Close navigation menu" (click)="collapse()"></button>
 <app-menu *ngIf="servicesEnabled" [navOpen]="menuOpen" (loggedOut)="onLoggedOut()" (menuToggled)="menuToggled($event)"></app-menu>
 </header>
 

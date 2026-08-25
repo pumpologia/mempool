@@ -3,7 +3,8 @@
     white-space: nowrap;
   }
   .dropdown-menu {
-    width: calc(100% - 34px);
+    max-width: 100%;
+    width: 100%;
   }
   @media (min-width: 768px) {
     .dropdown-menu {
@@ -12,8 +13,16 @@
   }
 }
 
+:host {
+  display: block;
+  min-width: 0;
+  width: 100%;
+}
+
 form {
   margin-top: 5px;
+  min-width: 0;
+  width: 100%;
   @media (min-width: 564px) {
     margin-right: -5px;
   }
@@ -29,12 +38,25 @@ form {
   }
 }
 
+.search-layout {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr) 62px;
+  min-width: 0;
+  width: 100%;
+}
+
+.search-action {
+  min-width: 0;
+}
+
 .search-submit {
   width: 62px;
   color: #fff;
 }
 
 .search-box-container {
+  min-width: 0;
   position: relative;
   width: 100%;
   @media (min-width: 768px) {
@@ -48,6 +70,31 @@ form {
   }
   .btn {
     width: 100px;
+  }
+}
+
+@media (max-width: 991.98px) {
+  form {
+    margin: 0;
+  }
+
+  .search-layout {
+    grid-template-columns: minmax(0, 1fr) 48px;
+  }
+
+  .search-box-container {
+    min-width: 0;
+  }
+
+  .form-control,
+  .search-submit {
+    height: 44px;
+  }
+
+  .search-submit {
+    padding-left: 0;
+    padding-right: 0;
+    width: 48px;
   }
 }
 

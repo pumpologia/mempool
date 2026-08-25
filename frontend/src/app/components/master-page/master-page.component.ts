@@ -99,18 +99,26 @@ export class MasterPageComponent implements OnInit, OnDestroy {
   }
 
   collapse(): void {
+    this.navCollapsed = false;
+  }
+
+  toggleNavigation(): void {
     this.navCollapsed = !this.navCollapsed;
   }
 
   isSmallScreen(): boolean {
-    return window.innerWidth <= 767.98;
+    return window.innerWidth <= 991.98;
   }
 
   onResize(): void {
     this.isMobile = this.isSmallScreen();
+    if (!this.isMobile) {
+      this.collapse();
+    }
   }
 
   brandClick(e): void {
+    this.collapse();
     this.stateService.resetScroll$.next(true);
   }
 
