@@ -2,10 +2,8 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/
 import { ActivatedRoute } from '@angular/router';
 import {
   PumpologiaApiService,
-  PumpologiaLeaderboardResponse,
   PumpologiaOperation,
   PumpologiaOperationsResponse,
-  PumpologiaPositionsResponse,
   PumpologiaPosition,
   PumpologiaSummary,
 } from '@app/services/pumpologia-api.service';
@@ -33,23 +31,12 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
   readonly pageKind = (this.route.snapshot.data.kind || 'overview') as PageKind;
   readonly positionId = this.route.snapshot.paramMap.get('positionId') || '';
   readonly initialSection = this.route.snapshot.data.section as string | undefined;
-  readonly positionLimit = 25;
-  readonly leaderboardLimit = 12;
   readonly activityLimit = 9;
-  readonly stateOptions = ['', 'OPEN', 'CLOSED', 'LIQUIDATED', 'EXPIRED'];
-  readonly directionOptions = ['', 'long', 'short'];
 
   apiError = false;
-  positionState = this.route.snapshot.queryParamMap.get('state') || '';
-  positionDirection = '';
-  positionOffset = 0;
-  leaderboardPeriod = 'all';
-  leaderboardOffset = 0;
   activityOffset = 0;
 
   private readonly destroy$ = new Subject<void>();
-  private readonly positionFilters$ = new BehaviorSubject<Record<string, string | number>>(this.makePositionFilters());
-  private readonly leaderboardRequest$ = new BehaviorSubject<{ period: string; offset: number }>({ period: 'all', offset: 0 });
   private readonly activityOffset$ = new BehaviorSubject<number>(0);
 
   readonly summary$: Observable<PumpologiaSummary | null> = timer(0, 15_000).pipe(
@@ -58,22 +45,6 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
         this.apiError = true;
         return of(null);
       }),
-    )),
-    shareReplay({ bufferSize: 1, refCount: true }),
-  );
-
-  readonly positions$: Observable<PumpologiaPositionsResponse | null> = this.positionFilters$.pipe(
-    switchMap(filters => this.pumpologiaApi.getPositions$(filters).pipe(
-      catchError(() => of(null)),
-      startWith(null),
-    )),
-    shareReplay({ bufferSize: 1, refCount: true }),
-  );
-
-  readonly leaderboard$: Observable<PumpologiaLeaderboardResponse | null> = this.leaderboardRequest$.pipe(
-    switchMap(request => this.pumpologiaApi.getLeaderboard$(request.period, this.leaderboardLimit, request.offset).pipe(
-      catchError(() => of(null)),
-      startWith(null),
     )),
     shareReplay({ bufferSize: 1, refCount: true }),
   );
@@ -111,34 +82,6 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  setPositionState(value: string): void {
-    this.positionState = value;
-    this.positionOffset = 0;
-    this.positionFilters$.next(this.makePositionFilters());
-  }
-
-  setPositionDirection(value: string): void {
-    this.positionDirection = value;
-    this.positionOffset = 0;
-    this.positionFilters$.next(this.makePositionFilters());
-  }
-
-  changePositionPage(delta: number): void {
-    this.positionOffset = Math.max(0, this.positionOffset + (delta * this.positionLimit));
-    this.positionFilters$.next(this.makePositionFilters());
-  }
-
-  setLeaderboardPeriod(value: string): void {
-    this.leaderboardPeriod = value;
-    this.leaderboardOffset = 0;
-    this.leaderboardRequest$.next({ period: value, offset: 0 });
-  }
-
-  changeLeaderboardPage(delta: number): void {
-    this.leaderboardOffset = Math.max(0, this.leaderboardOffset + (delta * this.leaderboardLimit));
-    this.leaderboardRequest$.next({ period: this.leaderboardPeriod, offset: this.leaderboardOffset });
   }
 
   changeActivityPage(delta: number): void {
@@ -202,10 +145,4 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
     return pumpologiaPnlLabel(operation);
   }
 
-  private makePositionFilters(): Record<string, string | number> {
-    const filters: Record<string, string | number> = { limit: this.positionLimit, offset: this.positionOffset };
-    if (this.positionState) filters.state = this.positionState;
-    if (this.positionDirection) filters.direction = this.positionDirection;
-    return filters;
-  }
 }

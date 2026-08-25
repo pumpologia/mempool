@@ -36,37 +36,23 @@
         <div class="block-body">
           <ng-container *ngIf="!minimal">
             <div *ngIf="block?.extras; else emptyfees" [attr.data-cy]="'bitcoin-block-offset=' + offset + '-index-' + i + '-fees'" class="fees">
-              ~<app-fee-rate [fee]="block?.extras?.medianFee" unitClass="" rounding="1.0-0"></app-fee-rate>
+              ~<app-fee-rate [fee]="block?.extras?.avgFeeRate ?? block?.extras?.medianFee" unitClass="" rounding="1.0-0"></app-fee-rate>
             </div>
             <ng-template #emptyfees>
               <div [attr.data-cy]="'bitcoin-block-offset=' + offset + '-index-' + i + '-fees'" class="fees">
                 <app-fee-rate unitClass=""></app-fee-rate>
               </div>
             </ng-template>
-            <div [attr.data-cy]="'bitcoin-block-' + offset + '-index-' + i + '-fee-span'" class="fee-span"
-              *ngIf="block?.extras?.minFee != null && block?.extras?.maxFee != null; else emptyfeespan">
-              <app-fee-rate [fee]="block?.extras?.minFee" [showUnit]="false" unitClass=""></app-fee-rate>
-              -
-              <app-fee-rate [fee]="block?.extras?.maxFee" unitClass=""></app-fee-rate>
+            <div class="fee-span pumpologia-change"
+              [class.positive]="(pumpologiaMarketFor(block)?.price_change_usd || 0) > 0"
+              [class.negative]="(pumpologiaMarketFor(block)?.price_change_usd || 0) < 0">
+              {{ formatPumpologiaChange(pumpologiaMarketFor(block)?.price_change_usd) }}
             </div>
-            <ng-template #emptyfeespan>
-              <div [attr.data-cy]="'bitcoin-block-offset=' + offset + '-index-' + i + '-fees'" class="fee-span">
-                <app-fee-rate unitClass=""></app-fee-rate>
-              </div>
-            </ng-template>
-            <div [attr.data-cy]="'bitcoin-block-' + offset + '-index-' + i + '-total-fees'" *ngIf="blockDisplayMode === 'fees'; else noMiningInfo"
-              class="block-size">
-              <app-amount [satoshis]="block.extras?.totalFees ?? 0" digitsInfo="1.2-3" [noFiat]="true"></app-amount>
+            <div class="block-size pumpologia-price">
+              {{ formatPumpologiaUsd(pumpologiaMarketFor(block)?.price_usd) }}
             </div>
-            <ng-template #noMiningInfo>
-            <div [attr.data-cy]="'bitcoin-block-' + offset + '-index-' + i + 'block-size'"
-              class="block-size" [innerHTML]="'&lrm;' + (block.size | bytes: 2)"></div>
-            </ng-template>
-            <div [attr.data-cy]="'bitcoin-block-' + i + '-transactions'" class="transaction-count">
-              <ng-container
-                *ngTemplateOutlet="block.tx_count === 1 ? transactionsSingular : transactionsPlural; context: {$implicit: block.tx_count | number}"></ng-container>
-              <ng-template #transactionsSingular let-i i18n="shared.transaction-count.singular">{{ i }} transaction</ng-template>
-              <ng-template #transactionsPlural let-i i18n="shared.transaction-count.plural">{{ i }} transactions</ng-template>
+            <div class="transaction-count pumpologia-interest">
+              {{ formatPumpologiaOpenInterest(pumpologiaMarketFor(block)) }}
             </div>
             <div [attr.data-cy]="'bitcoin-block-' + offset + '-index-' + i + '-time'" class="time-difference">
               <app-time kind="since" [time]="block.timestamp" [fastRender]="true" [precision]="1" minUnit="minute"></app-time>

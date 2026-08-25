@@ -65,6 +65,12 @@
   margin-bottom: 4px;
 }
 
+.pumpologia-change { color: var(--transparent-fg); }
+.pumpologia-change.positive { color: var(--pump-positive); }
+.pumpologia-change.negative { color: var(--pump-negative); }
+.pumpologia-price { color: var(--fg); font-size: 15px; line-height: 1.15; }
+.pumpologia-interest { color: var(--pump-purple); font-size: 12px; white-space: nowrap; }
+
 .bitcoin-block::after {
   content: '';
   width: var(--block-size);

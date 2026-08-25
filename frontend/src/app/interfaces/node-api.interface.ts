@@ -210,6 +210,7 @@ export interface PoolStat {
 export interface BlockExtension {
   totalFees?: number;
   medianFee?: number;
+  avgFeeRate?: number;
   minFee?: number;
   maxFee?: number;
   feeRange?: number[];

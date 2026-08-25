@@ -13,6 +13,7 @@ const PUMPOLOGIA_BACKEND_TIMEOUT_MS = 5000;
 const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 const CACHE_TTL_MS = 10_000;
 const CHART_TIMEFRAME_REGEX = /^(1h|4h|1d|1w)$/;
+const BLOCK_HEIGHTS_REGEX = /^\d+(,\d+){0,15}$/;
 
 type IndexerRecord = Record<string, unknown>;
 
@@ -61,6 +62,7 @@ class PumpologiaRoutes {
     app
       .get(`${API_PREFIX}/summary`, this.$getSummary.bind(this))
       .get(`${API_PREFIX}/btc-chart`, this.$getBtcChart.bind(this))
+      .get(`${API_PREFIX}/block-market`, this.$getBlockMarket.bind(this))
       .get(`${API_PREFIX}/positions`, this.$getPositions.bind(this))
       .get(`${API_PREFIX}/positions/:positionId`, this.$getPosition.bind(this))
       .get(`${API_PREFIX}/leaderboard`, this.$getLeaderboard.bind(this))
@@ -162,6 +164,19 @@ class PumpologiaRoutes {
             .filter(position => this.text(position.state).toUpperCase() === 'OPEN')
             .reduce((sum, position) => sum + BigInt(this.integerText(position.notional_sats)), 0n)
             .toString(),
+          open_interest_long_sats: positions
+            .filter(position => this.text(position.state).toUpperCase() === 'OPEN'
+              && this.text(position.direction).toLowerCase() === 'long')
+            .reduce((sum, position) => sum + BigInt(this.integerText(position.notional_sats)), 0n)
+            .toString(),
+          open_interest_short_sats: positions
+            .filter(position => this.text(position.state).toUpperCase() === 'OPEN'
+              && this.text(position.direction).toLowerCase() === 'short')
+            .reduce((sum, position) => sum + BigInt(this.integerText(position.notional_sats)), 0n)
+            .toString(),
+          total_notional_sats: positions
+            .reduce((sum, position) => sum + BigInt(this.integerText(position.notional_sats)), 0n)
+            .toString(),
           open_margin_sats: positions
             .filter(position => this.text(position.state).toUpperCase() === 'OPEN')
             .reduce((sum, position) => sum + BigInt(this.integerText(position.amt_sats)), 0n)
@@ -177,6 +192,70 @@ class PumpologiaRoutes {
       this.sendJson(res, data, 10);
     } catch (error) {
       this.sendUpstreamError(res, error, 'summary');
+    }
+  }
+
+  private async $getBlockMarket(req: Request, res: Response): Promise<void> {
+    const heightList = this.optionalString(req.query.heights, BLOCK_HEIGHTS_REGEX);
+    if (!heightList) {
+      this.sendValidationError(res, 'invalid block heights');
+      return;
+    }
+
+    const heights = Array.from(new Set(heightList.split(',').map(Number)));
+    if (heights.some(height => !Number.isSafeInteger(height) || height < 1 || height > 10_000_000)) {
+      this.sendValidationError(res, 'invalid block heights');
+      return;
+    }
+
+    try {
+      const [syncRaw, positionsRaw] = await Promise.all([
+        this.getIndexer('sync'),
+        this.getIndexer('positions'),
+      ]);
+      const sync = this.asRecord(syncRaw) as SyncRecord;
+      const checkpointHeight = this.number(sync.checkpoint_height);
+      const positions = Array.isArray(positionsRaw) ? positionsRaw as PositionRecord[] : [];
+      const sourceHeights = Array.from(new Set(heights.flatMap(height => {
+        const indexedHeight = Math.min(height, checkpointHeight);
+        return indexedHeight > 1 ? [indexedHeight, indexedHeight - 1] : [indexedHeight];
+      }).filter(height => height > 0)));
+      const prices = new Map<number, number | null>();
+
+      await Promise.all(sourceHeights.map(async height => {
+        try {
+          const oracle = this.asRecord(await this.getIndexer(`oracle/prices/${height}`));
+          prices.set(height, this.nullableNumber(oracle.price_usd));
+        } catch {
+          prices.set(height, null);
+        }
+      }));
+
+      const blocks = heights.map(height => {
+        const indexedHeight = Math.min(height, checkpointHeight);
+        const price = prices.get(indexedHeight) ?? null;
+        const previousPrice = prices.get(indexedHeight - 1) ?? null;
+        const activeHeight = indexedHeight || height;
+        const openInterest = positions
+          .filter(position => {
+            const openHeight = this.number(position.open_height);
+            const closeHeight = this.nullableNumber(position.close_height);
+            return openHeight > 0 && openHeight <= activeHeight && (closeHeight === null || closeHeight > activeHeight);
+          })
+          .reduce((sum, position) => sum + BigInt(this.integerText(position.notional_sats)), 0n);
+
+        return {
+          height,
+          indexed_height: indexedHeight,
+          price_usd: price,
+          price_change_usd: price !== null && previousPrice !== null ? price - previousPrice : null,
+          open_interest_sats: openInterest.toString(),
+        };
+      });
+
+      this.sendJson(res, { as_of_height: checkpointHeight, blocks }, 10);
+    } catch (error) {
+      this.sendUpstreamError(res, error, 'block-market');
     }
   }
 

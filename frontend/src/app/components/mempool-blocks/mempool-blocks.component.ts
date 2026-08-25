@@ -12,6 +12,7 @@ import { Location } from '@angular/common';
 import { DifficultyAdjustment, MempoolPosition } from '@interfaces/node-api.interface';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { ThemeService } from '@app/services/theme.service';
+import { PumpologiaApiService, PumpologiaBlockMarketPoint } from '@app/services/pumpologia-api.service';
 
 @Component({
   selector: 'app-mempool-blocks',
@@ -91,6 +92,10 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
 
   chainTip: number = -1;
   blockIndex = 1;
+  lastConfirmationTimestamp = 0;
+  projectedMarket: PumpologiaBlockMarketPoint | null = null;
+  pumpologiaMarketSubscription: Subscription;
+  pumpologiaMarketRefresh: ReturnType<typeof setInterval>;
 
   constructor(
     private router: Router,
@@ -100,6 +105,7 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
     private cd: ChangeDetectorRef,
     private relativeUrlPipe: RelativeUrlPipe,
     private location: Location,
+    private pumpologiaApi: PumpologiaApiService,
   ) { }
 
   ngOnInit() {
@@ -176,6 +182,7 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
         )
     ]).pipe(
       map(([lastBlock, mempoolBlocks]) => {
+        this.lastConfirmationTimestamp = lastBlock.timestamp;
         mempoolBlocks.forEach((block, i) => {
           block.index = this.blockIndex + i;
           block.height = lastBlock.height + i + 1;
@@ -251,6 +258,7 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
         }
 
         this.chainTip = this.stateService.latestBlockHeight;
+        this.loadPumpologiaMarket();
         if (isNewBlock && (block?.extras?.similarity == null || block?.extras?.similarity > 0.5) && !this.tabHidden) {
           this.blockIndex++;
         }
@@ -291,6 +299,7 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
         }
       }
     });
+    this.pumpologiaMarketRefresh = setInterval(() => this.loadPumpologiaMarket(), 15_000);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -312,6 +321,8 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
     this.chainTipSubscription.unsubscribe();
     this.keySubscription.unsubscribe();
     this.isTabHiddenSubscription.unsubscribe();
+    this.pumpologiaMarketSubscription?.unsubscribe();
+    clearInterval(this.pumpologiaMarketRefresh);
     clearTimeout(this.resetTransitionTimeout);
   }
 
@@ -324,6 +335,46 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
 
   trackByFn(index: number, block: MempoolBlock) {
     return (block.isStack) ? `stack-${block.index}` : block.index;
+  }
+
+  formatPumpologiaUsd(value: number | null | undefined): string {
+    if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD', maximumFractionDigits: 0,
+    }).format(value);
+  }
+
+  projectedAverageFee(block: MempoolBlock): number {
+    return block.blockVSize > 0 ? block.totalFees / block.blockVSize : block.medianFee;
+  }
+
+  formatPumpologiaChange(value: number | null | undefined): string {
+    if (value === null || value === undefined || !Number.isFinite(value)) return 'Δ —';
+    const formatted = new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD', maximumFractionDigits: 0,
+      signDisplay: 'always',
+    }).format(value);
+    return `Δ ${formatted}`;
+  }
+
+  formatPumpologiaOpenInterest(): string {
+    if (!this.projectedMarket?.price_usd) return 'OI —';
+    const usd = (Number(this.projectedMarket.open_interest_sats || 0) / 100_000_000) * this.projectedMarket.price_usd;
+    const formatted = new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 2,
+    }).format(usd);
+    return `OI ${formatted}`;
+  }
+
+  private loadPumpologiaMarket(): void {
+    if (!this.stateService.isMainnet() || this.chainTip < 1) return;
+    this.pumpologiaMarketSubscription?.unsubscribe();
+    this.pumpologiaMarketSubscription = this.pumpologiaApi.getBlockMarket$([this.chainTip]).subscribe({
+      next: response => {
+        this.projectedMarket = response.blocks[0] || null;
+        this.cd.markForCheck();
+      },
+    });
   }
 
   reduceEmptyBlocksToFitScreen(blocks: MempoolBlock[]): MempoolBlock[] {

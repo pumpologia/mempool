@@ -5,6 +5,7 @@ import { specialBlocks } from '@app/app.constants';
 import { BlockExtended } from '@interfaces/node-api.interface';
 import { Location } from '@angular/common';
 import { CacheService } from '@app/services/cache.service';
+import { PumpologiaApiService, PumpologiaBlockMarketPoint } from '@app/services/pumpologia-api.service';
 
 interface BlockchainBlock extends BlockExtended {
   placeholder?: boolean;
@@ -60,7 +61,10 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
   blocksFilled = false;
   arrowTransition = '1s';
   timeLtrSubscription: Subscription;
+  pumpologiaMarketSubscription: Subscription;
   timeLtr: boolean;
+  pumpologiaMarketByHeight: Record<number, PumpologiaBlockMarketPoint> = {};
+  pumpologiaMarketRefresh: ReturnType<typeof setInterval>;
 
   blockOffset: number = 155;
   dividerBlockOffset: number = 205;
@@ -81,6 +85,7 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
     public cacheService: CacheService,
     private cd: ChangeDetectorRef,
     private location: Location,
+    private pumpologiaApi: PumpologiaApiService,
   ) {
   }
 
@@ -146,6 +151,7 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
           }
 
           this.blocks = blocks;
+          this.loadPumpologiaMarket();
 
           this.blockStyles = [];
           if (animate) {
@@ -196,6 +202,8 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
 
     if (this.static) {
       this.updateStaticBlocks();
+    } else {
+      this.pumpologiaMarketRefresh = setInterval(() => this.loadPumpologiaMarket(), 15_000);
     }
   }
 
@@ -228,6 +236,8 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
     this.markBlockSubscription.unsubscribe();
     this.blockDisplayModeSubscription.unsubscribe();
     this.timeLtrSubscription.unsubscribe();
+    this.pumpologiaMarketSubscription?.unsubscribe();
+    clearInterval(this.pumpologiaMarketRefresh);
     clearInterval(this.interval);
   }
 
@@ -303,6 +313,7 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
       });
     }
     this.blocks = this.blocks.slice(0, this.count);
+    this.loadPumpologiaMarket();
     this.blockStyles = [];
     this.blocks.forEach((b, i) => this.blockStyles.push(this.getStyleForBlock(b, i, animateSlide ? -this.blockOffset : 0)));
     this.cd.markForCheck();
@@ -334,6 +345,54 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
 
   isSpecial(height: number): boolean {
     return this.specialBlocks[height]?.networks.includes(this.stateService.network || 'mainnet') ? true : false;
+  }
+
+  pumpologiaMarketFor(block: BlockchainBlock): PumpologiaBlockMarketPoint | null {
+    return this.pumpologiaMarketByHeight[block?.height] || null;
+  }
+
+  formatPumpologiaUsd(value: number | null | undefined): string {
+    if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD', maximumFractionDigits: 0,
+    }).format(value);
+  }
+
+  formatPumpologiaChange(value: number | null | undefined): string {
+    if (value === null || value === undefined || !Number.isFinite(value)) return 'Δ —';
+    const formatted = new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD', maximumFractionDigits: 0,
+      signDisplay: 'always',
+    }).format(value);
+    return `Δ ${formatted}`;
+  }
+
+  formatPumpologiaOpenInterest(point: PumpologiaBlockMarketPoint | null): string {
+    if (!point?.price_usd) return 'OI —';
+    const usd = (Number(point.open_interest_sats || 0) / 100_000_000) * point.price_usd;
+    const formatted = new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 2,
+    }).format(usd);
+    return `OI ${formatted}`;
+  }
+
+  private loadPumpologiaMarket(): void {
+    if (!this.stateService.isMainnet()) return;
+    const heights = Array.from(new Set(this.blocks
+      .map(block => block?.height)
+      .filter((height): height is number => Number.isInteger(height) && height > 0)))
+      .slice(0, 16);
+    if (!heights.length) return;
+    this.pumpologiaMarketSubscription?.unsubscribe();
+    this.pumpologiaMarketSubscription = this.pumpologiaApi.getBlockMarket$(heights).subscribe({
+      next: response => {
+        this.pumpologiaMarketByHeight = response.blocks.reduce<Record<number, PumpologiaBlockMarketPoint>>((items, point) => {
+          items[point.height] = point;
+          return items;
+        }, {});
+        this.cd.markForCheck();
+      },
+    });
   }
 
   getStyleForBlock(block: BlockchainBlock, index: number, animateEnterFrom: number = 0) {

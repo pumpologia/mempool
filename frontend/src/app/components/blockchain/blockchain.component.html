@@ -12,19 +12,6 @@
       <div id="divider" [hidden]="pageIndex > 0">
         <button
           type="button"
-          class="block-display-toggle"
-          (click)="toggleBlockDisplayMode()"
-          [attr.aria-label]="blockDisplayMode === 'fees'
-            ? 'Switch to displaying block sizes'
-            : 'Switch to displaying total fees per block'"
-          [attr.title]="blockDisplayMode === 'fees'
-            ? 'Switch to displaying block sizes'
-            : 'Switch to displaying total fees per block'">
-          <fa-icon [icon]="['fas', 'exchange-alt']" [fixedWidth]="true"></fa-icon>
-        </button>
-
-        <button
-          type="button"
           class="time-toggle"
           (click)="toggleTimeDirection()"
           [attr.aria-label]="timeLtr

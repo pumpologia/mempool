@@ -16,7 +16,6 @@ import { AcceleratorDashboardComponent } from '@components/acceleration/accelera
 import { PoolRankingComponent } from '@components/pool-ranking/pool-ranking.component';
 import { PoolComponent } from '@components/pool/pool.component';
 import { StartComponent } from '@components/start/start.component';
-import { StatisticsComponent } from '@components/statistics/statistics.component';
 import { DashboardComponent } from '@app/dashboard/dashboard.component';
 import { CustomDashboardComponent } from '@components/custom-dashboard/custom-dashboard.component';
 import { TreasuriesComponent } from '@components/treasuries/treasuries.component';
@@ -27,6 +26,7 @@ import { WalletComponent } from '@components/wallet/wallet.component';
 import { CalculatorComponent } from '@components/calculator/calculator.component';
 import { BlockGogglesGraphComponent } from '@components/block-goggles-graph/block-goggles-graph.component';
 import { PumpologiaExplorerComponent } from '@app/pumpologia/pumpologia-explorer.component';
+import { PumpologiaBtcChartComponent } from '@app/pumpologia/pumpologia-btc-chart.component';
 
 const browserWindow = window || {};
 // @ts-ignore
@@ -42,9 +42,9 @@ const routes: Routes = [
         component: StartComponent,
         children: [
           { path: '', component: PumpologiaExplorerComponent, data: { kind: 'overview' } },
-          { path: 'positions', component: PumpologiaExplorerComponent, data: { kind: 'overview', section: 'positions' } },
-          { path: 'leaderboard', component: PumpologiaExplorerComponent, data: { kind: 'overview', section: 'leaderboard' } },
-          { path: 'activity', component: PumpologiaExplorerComponent, data: { kind: 'overview', section: 'operations' } },
+          { path: 'positions', redirectTo: '', pathMatch: 'full' },
+          { path: 'leaderboard', redirectTo: '', pathMatch: 'full' },
+          { path: 'activity', component: PumpologiaExplorerComponent, data: { kind: 'overview', section: 'activity' } },
           { path: 'position/:positionId', component: PumpologiaExplorerComponent, data: { kind: 'position' } },
           { path: 'tokens', redirectTo: '', pathMatch: 'full' },
           { path: 'token/:tokenId', redirectTo: '', pathMatch: 'full' },
@@ -131,7 +131,7 @@ const routes: Routes = [
           {
             path: 'mempool',
             data: { networks: ['bitcoin', 'liquid'] },
-            component: StatisticsComponent,
+            component: PumpologiaBtcChartComponent,
           },
           {
             path: 'goggles',

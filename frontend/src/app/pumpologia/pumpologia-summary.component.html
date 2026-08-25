@@ -1,44 +1,17 @@
-<section class="pumpologia-summary" aria-labelledby="pumpologia-summary-title">
-  <div class="summary-heading">
-    <div>
-      <div class="eyebrow">Native Bitcoin protocol</div>
-      <h1 id="pumpologia-summary-title">Bitcoin, interpreted through Pumpologia.</h1>
-      <p>Track perpetual positions, exposure and performance alongside the Bitcoin chain that secures them.</p>
-    </div>
-    <a class="btn btn-primary protocol-button" [routerLink]="['/protocol' | relativeUrl]">
-      Explore protocol
-      <span aria-hidden="true">→</span>
+<section class="pumpologia-actions" aria-label="Pumpologia destinations">
+  <span class="actions-label">Pumpologia</span>
+  <nav class="action-grid">
+    <a class="action-button action-trade" href="https://pumpologia.com/trade/paper" target="_blank" rel="noopener noreferrer">
+      <span>Trade</span><i aria-hidden="true">↗</i>
     </a>
-  </div>
-
-  <ng-container *ngIf="summary$ | async as summary; else summaryUnavailable">
-    <div class="metric-grid">
-      <a class="metric" [routerLink]="['/block' | relativeUrl, summary.as_of.block_hash]">
-        <span class="metric-label">Indexed block</span>
-        <strong>{{ summary.as_of.block_height | number }}</strong>
-        <span class="metric-note">Pumpologia v1 checkpoint</span>
-      </a>
-      <a class="metric" [routerLink]="['/protocol' | relativeUrl]" [queryParams]="{state: 'OPEN'}">
-        <span class="metric-label">Open positions</span>
-        <strong>{{ getOpenPositions(summary) | number }}</strong>
-        <span class="metric-note">{{ summary.positions.total | number }} tracked positions</span>
-      </a>
-      <a class="metric" [routerLink]="['/protocol' | relativeUrl]" fragment="positions">
-        <span class="metric-label">Open interest</span>
-        <strong>{{ formatSatsAsUsd(summary.positions.open_interest_sats, summary.mark_price_usd) }}</strong>
-        <span class="metric-note">USD at indexed mark</span>
-      </a>
-      <a class="metric" [routerLink]="['/protocol' | relativeUrl]" fragment="operations">
-        <span class="metric-label">Valid operations</span>
-        <strong>{{ summary.as_of.indexed_operations | number }}</strong>
-        <span class="metric-note">Deterministically interpreted</span>
-      </a>
-    </div>
-  </ng-container>
+    <a class="action-button" [routerLink]="['/protocol' | relativeUrl]">
+      <span>Explore</span><i aria-hidden="true">→</i>
+    </a>
+    <a class="action-button" href="https://t.me/pumpologia_community" target="_blank" rel="noopener noreferrer">
+      <span>Community</span><i aria-hidden="true">↗</i>
+    </a>
+    <a class="action-button" href="https://x.com/pumpologia" target="_blank" rel="noopener noreferrer">
+      <span>Socials</span><i aria-hidden="true">↗</i>
+    </a>
+  </nav>
 </section>
-
-<ng-template #summaryUnavailable>
-  <div class="summary-unavailable" role="status">
-    Protocol data is temporarily unavailable. Bitcoin explorer features remain operational.
-  </div>
-</ng-template>

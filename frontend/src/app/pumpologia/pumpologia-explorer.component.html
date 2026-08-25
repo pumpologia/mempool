@@ -1,22 +1,11 @@
 <div class="container-xl protocol-page">
-  <header class="terminal-hero">
+  <header *ngIf="pageKind === 'position'" class="terminal-hero position-hero">
     <div class="hero-copy">
-      <a *ngIf="pageKind === 'position'" class="back-link" [routerLink]="['/' | relativeUrl]">← Back to explorer</a>
-      <div class="eyebrow">Pumpologia · Perpetual markets on Bitcoin</div>
-      <h1 *ngIf="pageKind === 'overview'">Pumpologia positions,<br><em>made visible.</em></h1>
-      <h1 *ngIf="pageKind === 'position'">Position<br><em>overview.</em></h1>
-      <p *ngIf="pageKind === 'overview'">Follow every Pumpologia position from opening margin to final P&amp;L while retaining the Bitcoin explorer and its verifiable execution trail.</p>
-      <p *ngIf="pageKind === 'position'">A focused view of exposure, risk parameters, performance and its Bitcoin anchor.</p>
+      <a class="back-link" [routerLink]="['/protocol' | relativeUrl]">← Back to activity</a>
+      <div class="eyebrow">Pumpologia position</div>
+      <h1>Position<br><em>overview.</em></h1>
+      <p>A focused view of exposure, risk parameters, performance and its Bitcoin anchor.</p>
     </div>
-    <ng-container *ngIf="summary$ | async as summary">
-      <div class="market-tape">
-        <span>BTC / USD indexed mark</span>
-        <strong>{{ formatUsd(summary.mark_price_usd) }}</strong>
-        <a [routerLink]="['/block' | relativeUrl, summary.as_of.block_hash]">
-          <i></i> Block {{ summary.as_of.block_height | number }}
-        </a>
-      </div>
-    </ng-container>
   </header>
 
   <div *ngIf="apiError" class="protocol-alert" role="alert">
@@ -31,146 +20,23 @@
           <strong>{{ formatSatsAsUsd(summary.positions.open_interest_sats, summary.mark_price_usd) }}</strong>
           <small>USD at indexed mark</small>
         </article>
-        <article>
-          <span>Open margin</span>
-          <strong>{{ formatSatsAsUsd(summary.positions.open_margin_sats, summary.mark_price_usd) }}</strong>
-          <small>USD at indexed mark</small>
+        <article class="metric-long">
+          <span>Long open interest</span>
+          <strong>{{ formatSatsAsUsd(summary.positions.open_interest_long_sats, summary.mark_price_usd) }}</strong>
+          <small>Open long exposure</small>
+        </article>
+        <article class="metric-short">
+          <span>Short open interest</span>
+          <strong>{{ formatSatsAsUsd(summary.positions.open_interest_short_sats, summary.mark_price_usd) }}</strong>
+          <small>Open short exposure</small>
         </article>
         <article>
-          <span>Live positions</span>
-          <strong>{{ summary.positions.open | number }}</strong>
-          <small>{{ summary.positions.total | number }} tracked in total</small>
-        </article>
-        <article>
-          <span>Trading accounts</span>
-          <strong>{{ summary.traders | number }}</strong>
-          <small>settled performance profiles</small>
+          <span>Total notional volume</span>
+          <strong>{{ formatSatsAsUsd(summary.positions.total_notional_sats, summary.mark_price_usd) }}</strong>
+          <small>All indexed positions</small>
         </article>
       </section>
-
-      <div class="market-strip" aria-label="Available markets">
-        <span class="strip-label">Markets</span>
-        <span *ngFor="let market of summary.markets" class="market-chip">
-          <b>{{ market.symbol }}</b> / USD <i></i> {{ market.status }}
-        </span>
-        <span class="strip-proof">{{ summary.as_of.indexed_operations | number }} verified events</span>
-      </div>
     </ng-container>
-
-    <section id="positions" class="protocol-section">
-      <div class="section-heading filter-heading">
-        <div>
-          <span class="section-kicker">Perpetual book</span>
-          <h2>Positions</h2>
-          <p>Margin, exposure, price path and performance—nothing extraneous.</p>
-        </div>
-        <div class="filters">
-          <label>
-            <span>Status</span>
-            <select class="form-select form-select-sm" [value]="positionState" (change)="setPositionState($any($event.target).value)">
-              <option *ngFor="let state of stateOptions" [value]="state">{{ state || 'All statuses' }}</option>
-            </select>
-          </label>
-          <label>
-            <span>Side</span>
-            <select class="form-select form-select-sm" [value]="positionDirection" (change)="setPositionDirection($any($event.target).value)">
-              <option *ngFor="let direction of directionOptions" [value]="direction">{{ direction || 'Long & short' }}</option>
-            </select>
-          </label>
-        </div>
-      </div>
-
-      <ng-container *ngIf="positions$ | async as positions; else loadingTable">
-        <div class="table-shell">
-          <table class="table protocol-table positions-table">
-            <thead>
-              <tr>
-                <th>Market</th><th>Side</th><th>Notional</th><th>Margin</th><th>Leverage</th>
-                <th>Entry</th><th>Mark / exit</th><th>P&amp;L</th><th>Status</th><th>Bitcoin proof</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let position of positions.items">
-                <td>
-                  <a class="market-link" [routerLink]="['/protocol/position' | relativeUrl, position.position_id]">
-                    <strong>{{ position.market }}</strong><span>/ USD</span>
-                  </a>
-                </td>
-                <td><span class="side-pill" [class.short]="position.side === 'short'">{{ position.side }}</span></td>
-                <td><strong>{{ formatSatsAsUsd(position.notional_sats, valuationPrice(position)) }}</strong><small>USD value</small></td>
-                <td>{{ formatSatsAsUsd(position.margin_sats, valuationPrice(position)) }} <small>USD value</small></td>
-                <td><strong>{{ position.leverage | number }}×</strong></td>
-                <td>{{ formatUsd(position.entry_price_usd) }}</td>
-                <td>{{ formatUsd(position.exit_price_usd || position.mark_price_usd) }}</td>
-                <td [ngClass]="pnlClass(position.pnl_usd)">
-                  <strong>{{ formatUsd(position.pnl_usd) }}</strong>
-                  <small>{{ position.pnl_kind === 'unrealized' ? 'unrealized' : formatReturn(position.return_bps) }}</small>
-                </td>
-                <td><span class="state-badge" [ngClass]="'state-' + position.status.toLowerCase()">{{ position.status }}</span></td>
-                <td>
-                  <a class="proof-link" [routerLink]="['/tx' | relativeUrl, position.txid]" [title]="position.txid">
-                    Tx {{ shortHash(position.txid, 5, 4) }} ↗
-                  </a>
-                </td>
-              </tr>
-              <tr *ngIf="!positions.items.length"><td colspan="10" class="empty-state">No positions match these filters.</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="table-pagination">
-          <span *ngIf="positions.items.length">{{ positionOffset + 1 }}–{{ positionOffset + positions.items.length }} of {{ positions.total }}</span>
-          <span *ngIf="!positions.items.length">0 positions</span>
-          <div class="icon-pagination" aria-label="Position pages">
-            <button class="btn btn-sm btn-secondary" title="Previous positions" aria-label="Previous positions" [disabled]="positionOffset === 0" (click)="changePositionPage(-1)"><fa-icon [icon]="['fas', 'angle-left']" [fixedWidth]="true"></fa-icon></button>
-            <button class="btn btn-sm btn-secondary" title="Next positions" aria-label="Next positions" [disabled]="positionOffset + positions.items.length >= positions.total" (click)="changePositionPage(1)"><fa-icon [icon]="['fas', 'angle-right']" [fixedWidth]="true"></fa-icon></button>
-          </div>
-        </div>
-      </ng-container>
-    </section>
-
-    <section id="leaderboard" class="protocol-section">
-      <div class="section-heading filter-heading">
-        <div>
-          <span class="section-kicker">Settled performance</span>
-          <h2>Leaderboard</h2>
-          <p>Public performance without exposing trader scripts or account internals.</p>
-        </div>
-        <label class="period-filter">
-          <span>Period</span>
-          <select class="form-select form-select-sm" [value]="leaderboardPeriod" (change)="setLeaderboardPeriod($any($event.target).value)">
-            <option value="all">All time</option><option value="24h">24 hours</option>
-            <option value="7d">7 days</option><option value="30d">30 days</option>
-          </select>
-        </label>
-      </div>
-      <ng-container *ngIf="leaderboard$ | async as leaderboard; else loadingTable">
-        <div class="table-shell">
-          <table class="table protocol-table leaderboard-table">
-            <thead><tr><th>Rank</th><th>Trader</th><th>Calculated P&amp;L</th><th>Avg. return</th><th>Trades</th><th>Record</th><th>Last block</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let entry of leaderboard.items">
-                <td class="rank">#{{ entry.rank }}</td>
-                <td><strong>{{ entry.trader }}</strong></td>
-                <td [ngClass]="pnlClass(entry.pnl_usd)"><strong>{{ formatUsd(entry.pnl_usd) }}</strong></td>
-                <td [class.positive]="entry.average_return_bps > 0" [class.negative]="entry.average_return_bps < 0">{{ formatReturn(entry.average_return_bps) }}</td>
-                <td>{{ entry.trades }}</td>
-                <td>{{ entry.wins }}W / {{ entry.losses }}L</td>
-                <td><a [routerLink]="['/block' | relativeUrl, entry.last_trade_height]">#{{ entry.last_trade_height | number }}</a></td>
-              </tr>
-              <tr *ngIf="!leaderboard.items.length"><td colspan="7" class="empty-state">No settled performance for this period.</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="table-pagination">
-          <span *ngIf="leaderboard.items.length">{{ leaderboardOffset + 1 }}–{{ leaderboardOffset + leaderboard.items.length }} of {{ leaderboard.total }}</span>
-          <span *ngIf="!leaderboard.items.length">0 traders</span>
-          <div class="icon-pagination" aria-label="Leaderboard pages">
-            <button class="btn btn-sm btn-secondary" title="Previous traders" aria-label="Previous traders" [disabled]="leaderboardOffset === 0" (click)="changeLeaderboardPage(-1)"><fa-icon [icon]="['fas', 'angle-left']" [fixedWidth]="true"></fa-icon></button>
-            <button class="btn btn-sm btn-secondary" title="Next traders" aria-label="Next traders" [disabled]="leaderboardOffset + leaderboard.items.length >= leaderboard.total" (click)="changeLeaderboardPage(1)"><fa-icon [icon]="['fas', 'angle-right']" [fixedWidth]="true"></fa-icon></button>
-          </div>
-        </div>
-      </ng-container>
-    </section>
 
     <section id="activity" class="protocol-section">
       <div class="section-heading">
@@ -209,9 +75,9 @@
               <div><span>Return</span><strong>{{ formatReturn(operation.return_bps) }}</strong></div>
             </div>
             <div class="activity-links">
-              <a *ngIf="operation.position_id" [routerLink]="['/protocol/position' | relativeUrl, operation.position_id]">Open position</a>
-              <a *ngIf="operation.txid" [routerLink]="['/tx' | relativeUrl, operation.txid]">Bitcoin tx</a>
-              <a [routerLink]="['/block' | relativeUrl, operation.block_height]">Block {{ operation.block_height | number }}</a>
+              <a *ngIf="operation.position_id" class="position-icon-link" [routerLink]="['/protocol/position' | relativeUrl, operation.position_id]" title="Full position" aria-label="Full position">
+                <fa-icon [icon]="['fas', 'external-link-alt']" [fixedWidth]="true"></fa-icon>
+              </a>
             </div>
           </article>
           <div *ngIf="!activity.items.length" class="activity-empty">No Pumpologia event on this page.</div>
@@ -227,13 +93,6 @@
       </ng-container>
     </section>
 
-    <section class="methodology">
-      <div>
-        <span class="section-kicker">Minimal by design</span>
-        <h2>Trading first.<br>Bitcoin verifiable.</h2>
-      </div>
-      <p>Pumpologia exposes the position lifecycle that traders need: side, margin, leverage, notional, indexed prices, risk levels and calculated P&amp;L. Raw payloads, scripts, internal versions, health diagnostics and full indexer records stay outside the public interface.</p>
-    </section>
   </ng-container>
 </div>
 

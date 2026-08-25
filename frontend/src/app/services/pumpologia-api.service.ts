@@ -81,6 +81,9 @@ export interface PumpologiaSummary {
     liquidated: number;
     expired: number;
     open_interest_sats: string;
+    open_interest_long_sats: string;
+    open_interest_short_sats: string;
+    total_notional_sats: string;
     open_margin_sats: string;
   };
   traders: number;
@@ -124,6 +127,19 @@ export interface PumpologiaOperationsResponse {
   as_of_height: number;
 }
 
+export interface PumpologiaBlockMarketPoint {
+  height: number;
+  indexed_height: number;
+  price_usd: number | null;
+  price_change_usd: number | null;
+  open_interest_sats: string;
+}
+
+export interface PumpologiaBlockMarketResponse {
+  as_of_height: number;
+  blocks: PumpologiaBlockMarketPoint[];
+}
+
 export interface PumpologiaOperationDetail {
   txid: string;
   items: PumpologiaOperation[];
@@ -151,6 +167,12 @@ export class PumpologiaApiService {
   getBtcChart$(timeframe: PumpologiaBtcChartResponse['timeframe'], limit = 168): Observable<PumpologiaBtcChartResponse> {
     return this.http.get<PumpologiaBtcChartResponse>(`${this.baseUrl}/btc-chart`, {
       params: this.toParams({ timeframe, limit }),
+    });
+  }
+
+  getBlockMarket$(heights: number[]): Observable<PumpologiaBlockMarketResponse> {
+    return this.http.get<PumpologiaBlockMarketResponse>(`${this.baseUrl}/block-market`, {
+      params: this.toParams({ heights: heights.join(',') }),
     });
   }
 
