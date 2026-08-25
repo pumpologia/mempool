@@ -88,6 +88,27 @@ export interface PumpologiaSummary {
   recent_activity: PumpologiaOperation[];
 }
 
+export interface PumpologiaChartCandle {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+export interface PumpologiaChartReference {
+  time: number;
+  value: number;
+}
+
+export interface PumpologiaBtcChartResponse {
+  timeframe: '1h' | '4h' | '1d' | '1w';
+  as_of_height: number;
+  mark_price_usd: number | null;
+  candles: PumpologiaChartCandle[];
+  reference: PumpologiaChartReference[];
+}
+
 export interface PumpologiaPositionsResponse {
   items: PumpologiaPosition[];
   total: number;
@@ -119,6 +140,12 @@ export class PumpologiaApiService {
 
   getSummary$(): Observable<PumpologiaSummary> {
     return this.http.get<PumpologiaSummary>(`${this.baseUrl}/summary`);
+  }
+
+  getBtcChart$(timeframe: PumpologiaBtcChartResponse['timeframe'], limit = 168): Observable<PumpologiaBtcChartResponse> {
+    return this.http.get<PumpologiaBtcChartResponse>(`${this.baseUrl}/btc-chart`, {
+      params: this.toParams({ timeframe, limit }),
+    });
   }
 
   getPositions$(filters: Record<string, string | number> = {}): Observable<PumpologiaPositionsResponse> {

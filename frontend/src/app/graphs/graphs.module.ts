@@ -52,6 +52,7 @@ import { PumpologiaSummaryComponent } from '@app/pumpologia/pumpologia-summary.c
 import { PumpologiaPositionsWidgetComponent } from '@app/pumpologia/pumpologia-positions-widget.component';
 import { PumpologiaExplorerComponent } from '@app/pumpologia/pumpologia-explorer.component';
 import { PumpologiaContextComponent } from '@app/pumpologia/pumpologia-context.component';
+import { PumpologiaBtcChartComponent } from '@app/pumpologia/pumpologia-btc-chart.component';
 
 @NgModule({
   declarations: [
@@ -102,6 +103,7 @@ import { PumpologiaContextComponent } from '@app/pumpologia/pumpologia-context.c
     PumpologiaSummaryComponent,
     PumpologiaPositionsWidgetComponent,
     PumpologiaExplorerComponent,
+    PumpologiaBtcChartComponent,
   ],
   imports: [
     CommonModule,

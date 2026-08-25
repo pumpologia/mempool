@@ -1,17 +1,25 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, Output } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { IconName } from '@fortawesome/fontawesome-common-types';
 import {
   PumpologiaApiService,
   PumpologiaOperation,
 } from '@app/services/pumpologia-api.service';
 import { Subject, of } from 'rxjs';
 import { catchError, takeUntil } from 'rxjs/operators';
+import {
+  pumpologiaEventIcon,
+  pumpologiaEventKind,
+  pumpologiaEventLabel,
+  pumpologiaPnlLabel,
+} from './pumpologia-event.utils';
 
 @Component({
   selector: 'app-pumpologia-context',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FontAwesomeModule],
   templateUrl: './pumpologia-context.component.html',
   styleUrls: ['./pumpologia-context.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -85,5 +93,26 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
   pnlClass(value?: string | null): string {
     const numeric = Number(value || 0);
     return numeric > 0 ? 'positive' : numeric < 0 ? 'negative' : '';
+  }
+
+  formatReturn(value?: number | null): string {
+    if (value === null || value === undefined) return '—';
+    return `${(value / 100).toFixed(2)}%`;
+  }
+
+  operationEventKind(operation: PumpologiaOperation): string {
+    return pumpologiaEventKind(operation);
+  }
+
+  operationEventIcon(operation: PumpologiaOperation): IconName {
+    return pumpologiaEventIcon(operation);
+  }
+
+  operationEventLabel(operation: PumpologiaOperation): string {
+    return pumpologiaEventLabel(operation);
+  }
+
+  operationPnlLabel(operation: PumpologiaOperation): string {
+    return pumpologiaPnlLabel(operation);
   }
 }

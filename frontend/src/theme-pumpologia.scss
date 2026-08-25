@@ -169,7 +169,7 @@ samp,
 }
 
 html {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 body {
@@ -180,6 +180,7 @@ body {
   background-size: 84px 84px;
   font-weight: 400;
   letter-spacing: -0.008em;
+  line-height: 1.45;
 }
 
 h1,
@@ -266,7 +267,7 @@ a:hover {
   border-radius: 0.08rem !important;
   color: $paper !important;
   font-family: var(--font-interface);
-  font-size: 0.78rem;
+  font-size: 0.92rem;
 }
 
 .form-control::placeholder {
@@ -286,7 +287,7 @@ a:hover {
 .btn {
   border-radius: 0.08rem;
   font-family: var(--font-interface);
-  font-size: 0.72rem;
+  font-size: 0.86rem;
   font-weight: 400;
   letter-spacing: 0.045em;
   text-transform: uppercase;
@@ -380,7 +381,7 @@ a:hover {
   border: 1px solid $rule;
   border-radius: 0.08rem;
   box-shadow: none;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
 }
 
 .table {
@@ -389,7 +390,7 @@ a:hover {
   --bs-table-border-color: #{$rule};
   --bs-table-striped-bg: #151514;
   --bs-table-hover-bg: #1b1b1a;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
 }
 
 .table > :not(caption) > * > * {
@@ -398,7 +399,7 @@ a:hover {
 
 .table th {
   color: $muted;
-  font-size: 0.64rem;
+  font-size: 0.78rem;
   font-weight: 400;
   letter-spacing: 0.075em;
   text-transform: uppercase;
@@ -406,7 +407,7 @@ a:hover {
 
 .badge {
   border-radius: 999px;
-  font-size: 0.62rem;
+  font-size: 0.76rem;
   font-weight: 400;
   letter-spacing: 0.045em;
 }
@@ -542,11 +543,11 @@ hr {
 .detail-panel { margin-top: 1rem; }
 .detail-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .detail-field { background: $surface; border: 1px solid $rule; border-radius: 0.08rem; display: flex; flex-direction: column; min-width: 0; padding: 1rem; }
-.detail-field span { color: $muted; font-size: 0.64rem; letter-spacing: 0.07em; text-transform: uppercase; }
-.detail-field strong { font-family: var(--font-mono) !important; font-size: 0.74rem; font-weight: 400; margin-top: 0.45rem; overflow-wrap: anywhere; }
+.detail-field span { color: $muted; font-size: 0.8rem; letter-spacing: 0.07em; text-transform: uppercase; }
+.detail-field strong { font-family: var(--font-mono) !important; font-size: 0.9rem; font-weight: 400; margin-top: 0.45rem; overflow-wrap: anywhere; }
 .detail-panel details { background: $surface; border: 1px solid $rule; border-radius: 0.08rem; margin-top: 1rem; padding: 1rem; }
-.detail-panel summary { cursor: pointer; font-size: 0.72rem; font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; }
-.detail-panel pre { background: #050505; border: 1px solid $rule; border-radius: 0; color: $paper; font-size: 0.68rem; margin: 1rem 0 0; max-height: 70vh; overflow: auto; padding: 1rem; }
+.detail-panel summary { cursor: pointer; font-size: 0.86rem; font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; }
+.detail-panel pre { background: #050505; border: 1px solid $rule; border-radius: 0; color: $paper; font-size: 0.82rem; margin: 1rem 0 0; max-height: 70vh; overflow: auto; padding: 1rem; }
 
 @media (max-width: 991.98px) {
   .methodology { grid-template-columns: 1fr; }
@@ -554,7 +555,7 @@ hr {
 }
 
 @media (max-width: 575.98px) {
-  html { font-size: 13.5px; }
+  html { font-size: 15.5px; }
   body { background-size: 56px 56px; }
   .detail-grid { grid-template-columns: 1fr; }
 }

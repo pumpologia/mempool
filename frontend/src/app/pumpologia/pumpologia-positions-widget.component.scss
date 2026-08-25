@@ -27,7 +27,7 @@
 
 .widget-heading p {
   color: var(--transparent-fg);
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   line-height: 1.5;
   margin: 0.3rem 0 0;
 }
@@ -35,7 +35,7 @@
 .title-link {
   color: var(--fg);
   flex: 0 0 auto;
-  font-size: 0.64rem;
+  font-size: 0.8rem;
   font-weight: 400;
   letter-spacing: 0.065em;
   text-decoration: underline;
@@ -51,7 +51,7 @@
 .positions-table th {
   border-top: 0;
   color: var(--transparent-fg);
-  font-size: 0.6rem;
+  font-size: 0.76rem;
   font-weight: 400;
   letter-spacing: 0.075em;
   text-transform: uppercase;
@@ -60,7 +60,7 @@
 
 .positions-table td {
   border-color: var(--border-subtle);
-  font-size: 0.72rem;
+  font-size: 0.88rem;
   vertical-align: middle;
 }
 
@@ -78,7 +78,7 @@
   color: var(--transparent-fg);
   display: block;
   font-family: var(--font-interface);
-  font-size: 0.6rem;
+  font-size: 0.76rem;
   font-weight: 400;
 }
 
@@ -113,7 +113,7 @@
   align-items: center;
   color: var(--transparent-fg);
   display: flex;
-  font-size: 0.7rem;
+  font-size: 0.88rem;
   gap: 0.6rem;
   justify-content: center;
   min-height: 7rem;

@@ -174,17 +174,32 @@
       </div>
       <ng-container *ngIf="summary$ | async as summary; else loadingTable">
         <div class="activity-grid">
-          <article *ngFor="let operation of summary.recent_activity" class="activity-card">
+          <article *ngFor="let operation of summary.recent_activity" class="activity-card" [ngClass]="'event-' + operationEventKind(operation)">
             <div class="activity-top">
-              <span class="side-pill" [class.short]="operation.side === 'short'">{{ operation.side || operation.type }}</span>
+              <div class="event-identity">
+                <span class="event-icon" aria-hidden="true"><fa-icon [icon]="['fas', operationEventIcon(operation)]" [fixedWidth]="true"></fa-icon></span>
+                <div>
+                  <span class="event-label">{{ operationEventLabel(operation) }}</span>
+                  <h3>{{ operation.market || 'Pumpologia' }} <small>/ USD</small></h3>
+                </div>
+              </div>
               <span class="state-badge" [class.state-active]="operation.trade_status === 'OPEN'">{{ operation.trade_status }}</span>
             </div>
-            <h3>{{ operationLabel(operation) }}</h3>
+            <div class="activity-state">
+              <span class="side-pill" [class.short]="operation.side === 'short'">
+                <fa-icon [icon]="['fas', operation.side === 'short' ? 'caret-down' : 'caret-up']" [fixedWidth]="true"></fa-icon>
+                {{ operation.side || operation.type }}
+              </span>
+              <span class="pnl-status" [ngClass]="pnlClass(operation.pnl_usd)">
+                <fa-icon [icon]="['fas', 'money-bill-trend-up']" [fixedWidth]="true"></fa-icon>
+                {{ operationPnlLabel(operation) }} · {{ formatUsd(operation.pnl_usd) }}
+              </span>
+            </div>
             <div class="activity-values">
               <div><span>Notional</span><strong>{{ formatSats(operation.notional_sats) }} sats</strong></div>
               <div><span>Margin</span><strong>{{ formatSats(operation.margin_sats) }} sats</strong></div>
               <div><span>Leverage</span><strong>{{ operation.leverage | number }}×</strong></div>
-              <div><span>P&amp;L</span><strong [ngClass]="pnlClass(operation.pnl_usd)">{{ formatUsd(operation.pnl_usd) }}</strong></div>
+              <div><span>Return</span><strong>{{ formatReturn(operation.return_bps) }}</strong></div>
             </div>
             <div class="activity-links">
               <a *ngIf="operation.position_id" [routerLink]="['/protocol/position' | relativeUrl, operation.position_id]">Open position</a>

@@ -11,6 +11,13 @@ import {
 import { SeoService } from '@app/services/seo.service';
 import { BehaviorSubject, Observable, Subject, of, timer } from 'rxjs';
 import { catchError, shareReplay, switchMap, takeUntil } from 'rxjs/operators';
+import { IconName } from '@fortawesome/fontawesome-common-types';
+import {
+  pumpologiaEventIcon,
+  pumpologiaEventKind,
+  pumpologiaEventLabel,
+  pumpologiaPnlLabel,
+} from './pumpologia-event.utils';
 
 type PageKind = 'overview' | 'position';
 
@@ -141,6 +148,22 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
   operationLabel(operation: PumpologiaOperation): string {
     if (operation.side) return `${operation.side.toUpperCase()} ${operation.market}`;
     return operation.type;
+  }
+
+  operationEventKind(operation: PumpologiaOperation): string {
+    return pumpologiaEventKind(operation);
+  }
+
+  operationEventIcon(operation: PumpologiaOperation): IconName {
+    return pumpologiaEventIcon(operation);
+  }
+
+  operationEventLabel(operation: PumpologiaOperation): string {
+    return pumpologiaEventLabel(operation);
+  }
+
+  operationPnlLabel(operation: PumpologiaOperation): string {
+    return pumpologiaPnlLabel(operation);
   }
 
   private makePositionFilters(): Record<string, string | number> {

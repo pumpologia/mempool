@@ -9,8 +9,10 @@ const TICK_REGEX = /^[a-z0-9]{1,32}$/i;
 const STATE_REGEX = /^[a-z_]{1,32}$/i;
 const DIRECTION_REGEX = /^(long|short)$/i;
 const INDEXER_TIMEOUT_MS = 5000;
+const PUMPOLOGIA_BACKEND_TIMEOUT_MS = 5000;
 const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 const CACHE_TTL_MS = 10_000;
+const CHART_TIMEFRAME_REGEX = /^(1h|4h|1d|1w)$/;
 
 type IndexerRecord = Record<string, unknown>;
 
@@ -46,6 +48,7 @@ class PumpologiaRoutes {
   private readonly cache = new Map<string, CacheEntry>();
   private readonly enabled = process.env.PUMPOLOGIA_INDEXER_ENABLED === 'true';
   private readonly indexerUrl = (process.env.PUMPOLOGIA_INDEXER_URL || 'http://127.0.0.1:8088').replace(/\/$/, '');
+  private readonly backendUrl = (process.env.PUMPOLOGIA_BACKEND_URL || 'http://127.0.0.1:4301').replace(/\/$/, '');
 
   public initRoutes(app: Application): void {
     if (!this.enabled) {
@@ -57,6 +60,7 @@ class PumpologiaRoutes {
     // required by the public trading terminal leave this gateway.
     app
       .get(`${API_PREFIX}/summary`, this.$getSummary.bind(this))
+      .get(`${API_PREFIX}/btc-chart`, this.$getBtcChart.bind(this))
       .get(`${API_PREFIX}/positions`, this.$getPositions.bind(this))
       .get(`${API_PREFIX}/positions/:positionId`, this.$getPosition.bind(this))
       .get(`${API_PREFIX}/leaderboard`, this.$getLeaderboard.bind(this))
@@ -64,6 +68,50 @@ class PumpologiaRoutes {
       .get(`${API_PREFIX}/operations/:txid`, this.$getOperation.bind(this));
 
     logger.notice(`Pumpologia trading API enabled for ${this.indexerUrl}`, this.tag);
+  }
+
+  private async $getBtcChart(req: Request, res: Response): Promise<void> {
+    const requestedTimeframe = this.optionalString(req.query.timeframe, CHART_TIMEFRAME_REGEX);
+    const limit = this.parseInteger(req.query.limit, 24, 500, 168);
+    if (requestedTimeframe === null || limit === null) {
+      this.sendValidationError(res, 'invalid chart filter');
+      return;
+    }
+    const timeframe = requestedTimeframe || '1h';
+
+    try {
+      const raw = this.asRecord(await this.getPumpologiaBackend('v1/charts/oracle/btc-usd', { timeframe, limit }));
+      const data = this.asRecord(raw.data);
+      const series = Array.isArray(data.series) ? data.series.map(item => this.asRecord(item)) : [];
+      const priceSeries = series.find(item => this.text(item.id) === 'price');
+      const referenceSeries = series.find(item => this.text(item.id) === 'mempool');
+      const candles = (Array.isArray(priceSeries?.data) ? priceSeries.data : [])
+        .map(point => this.asRecord(point))
+        .map(point => ({
+          time: this.number(point.time),
+          open: this.nullableNumber(point.open),
+          high: this.nullableNumber(point.high),
+          low: this.nullableNumber(point.low),
+          close: this.nullableNumber(point.close),
+        }))
+        .filter(point => point.time > 0 && point.open !== null && point.high !== null
+          && point.low !== null && point.close !== null);
+      const reference = (Array.isArray(referenceSeries?.data) ? referenceSeries.data : [])
+        .map(point => this.asRecord(point))
+        .map(point => ({ time: this.number(point.time), value: this.nullableNumber(point.value) }))
+        .filter(point => point.time > 0 && point.value !== null);
+      const latest = candles[candles.length - 1];
+
+      this.sendJson(res, {
+        timeframe: this.text(data.timeframe, timeframe),
+        as_of_height: this.number(data.asOfHeight),
+        mark_price_usd: latest?.close ?? null,
+        candles,
+        reference,
+      }, 15);
+    } catch (error) {
+      this.sendUpstreamError(res, error, 'btc-chart');
+    }
   }
 
   private async $getSummary(_req: Request, res: Response): Promise<void> {
@@ -451,6 +499,22 @@ class PumpologiaRoutes {
     const response = await axios.get(`${this.indexerUrl}/${path}`, {
       params,
       timeout: INDEXER_TIMEOUT_MS,
+      maxContentLength: MAX_RESPONSE_BYTES,
+      maxBodyLength: MAX_RESPONSE_BYTES,
+      headers: { Accept: 'application/json' },
+    });
+    this.setCached(cacheKey, response.data);
+    return response.data;
+  }
+
+  /** @asyncUnsafe */
+  private async getPumpologiaBackend(path: string, params: Record<string, string | number> = {}): Promise<unknown> {
+    const cacheKey = `backend:${path}?${new URLSearchParams(Object.entries(params).map(([key, value]) => [key, String(value)])).toString()}`;
+    const cached = this.getCached(cacheKey);
+    if (cached !== undefined) return cached;
+    const response = await axios.get(`${this.backendUrl}/${path}`, {
+      params,
+      timeout: PUMPOLOGIA_BACKEND_TIMEOUT_MS,
       maxContentLength: MAX_RESPONSE_BYTES,
       maxBodyLength: MAX_RESPONSE_BYTES,
       headers: { Accept: 'application/json' },

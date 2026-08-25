@@ -31,6 +31,17 @@ jq -e '
   (.recent_activity | type == "array")
 ' "$work_dir/summary.json" >/dev/null
 
+request_json '/api/pumpologia/v1/btc-chart?timeframe=1h&limit=48' "$work_dir/chart.json"
+jq -e '
+  (keys | sort) == (["as_of_height", "candles", "mark_price_usd", "reference", "timeframe"] | sort) and
+  .timeframe == "1h" and
+  (.as_of_height | type == "number" and . > 0) and
+  (.mark_price_usd | type == "number") and
+  (.candles | type == "array" and length > 0) and
+  (.candles[0] | keys | sort) == (["close", "high", "low", "open", "time"] | sort) and
+  (.reference | type == "array")
+' "$work_dir/chart.json" >/dev/null
+
 status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
   --connect-timeout 5 --max-time 20 \
   -X POST "${base_url}/api/pumpologia/v1/summary")

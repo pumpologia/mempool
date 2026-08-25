@@ -73,6 +73,7 @@ services:
       MAXMIND_ENABLED: "false"
       PUMPOLOGIA_INDEXER_ENABLED: "true"
       PUMPOLOGIA_INDEXER_URL: http://127.0.0.1:8088
+      PUMPOLOGIA_BACKEND_URL: http://127.0.0.1:4301
     volumes:
       - /var/lib/bitcoin:/bitcoin:ro
       - /var/lib/pumpologia/mempool/cache:/backend/cache
