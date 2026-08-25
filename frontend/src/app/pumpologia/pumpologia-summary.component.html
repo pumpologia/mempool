@@ -25,8 +25,8 @@
       </a>
       <a class="metric" [routerLink]="['/protocol' | relativeUrl]" fragment="positions">
         <span class="metric-label">Open interest</span>
-        <strong>{{ formatSats(summary.positions.open_interest_sats) }}</strong>
-        <span class="metric-note">sats notional</span>
+        <strong>{{ formatSatsAsUsd(summary.positions.open_interest_sats, summary.mark_price_usd) }}</strong>
+        <span class="metric-note">USD at indexed mark</span>
       </a>
       <a class="metric" [routerLink]="['/protocol' | relativeUrl]" fragment="operations">
         <span class="metric-label">Valid operations</span>

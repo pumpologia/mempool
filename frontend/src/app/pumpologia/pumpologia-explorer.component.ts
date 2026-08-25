@@ -152,10 +152,6 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
     return `${value.slice(0, leading)}…${value.slice(-trailing)}`;
   }
 
-  formatSats(value?: string | number | null): string {
-    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Number(value || 0));
-  }
-
   formatUsd(value?: string | number | null): string {
     if (value === null || value === undefined || value === '') return '—';
     return new Intl.NumberFormat('en-US', {
@@ -164,6 +160,15 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(Number(value));
+  }
+
+  formatSatsAsUsd(value: string | number | null | undefined, price: number | null): string {
+    if (price === null || !Number.isFinite(price)) return '—';
+    return this.formatUsd((Number(value || 0) / 100_000_000) * price);
+  }
+
+  valuationPrice(item: PumpologiaPosition | PumpologiaOperation): number | null {
+    return item.exit_price_usd ?? item.mark_price_usd ?? item.entry_price_usd;
   }
 
   formatReturn(value?: number | null): string {

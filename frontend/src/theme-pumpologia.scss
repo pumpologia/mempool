@@ -71,9 +71,9 @@ $link-hover: #ffffff;
   --pump-yellow: #{$yellow};
   --pump-rose: #{$rose};
   --pump-neutral: #{$neutral};
-  --pump-long: #{$blue};
-  --pump-short: #{$purple};
-  --pump-open: #{$green};
+  --pump-long: #{$green};
+  --pump-short: #{$rose};
+  --pump-open: #{$blue};
   --pump-closed: #{$neutral};
   --pump-positive: #{$green};
   --pump-negative: #{$rose};
@@ -440,6 +440,24 @@ a:hover {
   font-size: 0.82rem;
   font-weight: 400;
   letter-spacing: 0.045em;
+}
+
+/*
+ * Bootstrap tooltips are mounted at document level. Explicitly pair the
+ * journal's paper surface with ink text so OP_RETURN previews never inherit
+ * the surrounding light foreground colour.
+ */
+.tooltip {
+  --bs-tooltip-bg: #{$paper};
+  --bs-tooltip-color: #{$ink};
+}
+
+.tooltip .tooltip-inner {
+  background: $paper;
+  border: 1px solid $paper;
+  color: $ink !important;
+  font-size: 0.86rem;
+  opacity: 1;
 }
 
 .text-light {

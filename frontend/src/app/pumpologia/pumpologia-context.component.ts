@@ -106,15 +106,20 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
     return value && value.length > 18 ? `${value.slice(0, 10)}…${value.slice(-6)}` : value || '—';
   }
 
-  formatSats(value?: string | number | null): string {
-    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Number(value || 0));
-  }
-
   formatUsd(value?: string | number | null): string {
     if (value === null || value === undefined || value === '') return '—';
     return new Intl.NumberFormat('en-US', {
       style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2,
     }).format(Number(value));
+  }
+
+  formatSatsAsUsd(value: string | number | null | undefined, price: number | null): string {
+    if (price === null || !Number.isFinite(price)) return '—';
+    return this.formatUsd((Number(value || 0) / 100_000_000) * price);
+  }
+
+  valuationPrice(operation: PumpologiaOperation): number | null {
+    return operation.exit_price_usd ?? operation.mark_price_usd ?? operation.entry_price_usd;
   }
 
   pnlClass(value?: string | null): string {

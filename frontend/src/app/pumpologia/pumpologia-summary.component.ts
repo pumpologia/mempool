@@ -22,7 +22,13 @@ export class PumpologiaSummaryComponent {
     return summary.positions.open || 0;
   }
 
-  formatSats(value: string): string {
-    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Number(value || 0));
+  formatSatsAsUsd(value: string, price: number | null): string {
+    if (price === null || !Number.isFinite(price)) return '—';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format((Number(value || 0) / 100_000_000) * price);
   }
 }

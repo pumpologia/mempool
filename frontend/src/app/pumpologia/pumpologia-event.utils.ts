@@ -15,10 +15,10 @@ export function pumpologiaEventKind(operation: PumpologiaOperation): PumpologiaE
 
 export function pumpologiaEventIcon(operation: PumpologiaOperation): IconName {
   switch (pumpologiaEventKind(operation)) {
-    case 'long': return 'caret-up';
-    case 'short': return 'caret-down';
+    case 'long':
+    case 'short': return 'arrow-right';
     case 'close': return 'exchange-alt';
-    case 'liquidation': return 'bolt';
+    case 'liquidation': return 'ban';
     case 'take-profit': return 'circle-check';
     case 'stop-loss': return 'circle-xmark';
     case 'timeout':

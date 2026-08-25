@@ -11,9 +11,8 @@
     <article *ngFor="let operation of operations" [ngClass]="'event-' + operationEventKind(operation)">
       <div class="trade-head">
         <div class="event-identity">
-          <span class="event-icon" aria-hidden="true"><fa-icon [icon]="['fas', operationEventIcon(operation)]" [fixedWidth]="true"></fa-icon></span>
+          <span class="event-icon" [title]="operationEventLabel(operation)" [attr.aria-label]="operationEventLabel(operation)"><fa-icon [icon]="['fas', operationEventIcon(operation)]" [fixedWidth]="true"></fa-icon></span>
           <div class="event-copy">
-            <span class="event-label">{{ operationEventLabel(operation) }}</span>
             <strong>{{ operation.market || 'Pumpologia' }} <small>/ USD</small></strong>
           </div>
         </div>
@@ -21,28 +20,24 @@
       </div>
 
       <div class="trade-state">
-        <span class="side-pill" [class.short]="operation.side === 'short'">
-          <fa-icon [icon]="['fas', operation.side === 'short' ? 'caret-down' : 'caret-up']" [fixedWidth]="true"></fa-icon>
-          {{ operation.side || operation.type }}
-        </span>
         <span class="pnl-status" [ngClass]="pnlClass(operation.pnl_usd)">
-          <fa-icon [icon]="['fas', 'money-bill-trend-up']" [fixedWidth]="true"></fa-icon>
-          {{ operationPnlLabel(operation) }} · {{ formatUsd(operation.pnl_usd) }}
+          <span>{{ operationPnlLabel(operation) }}</span>
+          <strong>{{ formatUsd(operation.pnl_usd) }}</strong>
+        </span>
+        <span class="side-pill" [class.short]="operation.side === 'short'">
+          {{ operation.side || operation.type }}
         </span>
       </div>
 
       <div class="trade-grid">
-        <div><span>Margin</span><strong>{{ formatSats(operation.margin_sats) }} sats</strong></div>
+        <div><span>Margin</span><strong>{{ formatSatsAsUsd(operation.margin_sats, valuationPrice(operation)) }}</strong></div>
+        <div><span>Notional</span><strong>{{ formatSatsAsUsd(operation.notional_sats, valuationPrice(operation)) }}</strong></div>
         <div><span>Leverage</span><strong>{{ operation.leverage | number }}×</strong></div>
-        <div><span>Notional</span><strong>{{ formatSats(operation.notional_sats) }} sats</strong></div>
-        <div><span>Entry</span><strong>{{ formatUsd(operation.entry_price_usd) }}</strong></div>
         <div><span>Return</span><strong>{{ formatReturn(operation.return_bps) }}</strong></div>
       </div>
 
-      <div class="trade-links">
-        <a *ngIf="operation.position_id" [routerLink]="['/protocol/position', operation.position_id]">Full position</a>
-        <a *ngIf="!txid && operation.txid" [routerLink]="['/tx', operation.txid]">Opening transaction</a>
-        <a [routerLink]="['/block', operation.block_height]">Block {{ operation.block_height | number }}</a>
+      <div *ngIf="operation.position_id" class="trade-links">
+        <a [routerLink]="['/protocol/position', operation.position_id]" title="Full position" aria-label="Full position"><fa-icon [icon]="['fas', 'external-link-alt']" [fixedWidth]="true"></fa-icon></a>
       </div>
     </article>
   </div>

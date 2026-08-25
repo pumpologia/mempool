@@ -23,10 +23,6 @@ export class PumpologiaPositionsWidgetComponent {
 
   constructor(private pumpologiaApi: PumpologiaApiService) {}
 
-  formatSats(value: string): string {
-    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Number(value || 0));
-  }
-
   formatUsd(value: string | number | null): string {
     if (value === null || value === undefined || value === '') return '—';
     return new Intl.NumberFormat('en-US', {
@@ -35,6 +31,15 @@ export class PumpologiaPositionsWidgetComponent {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(Number(value));
+  }
+
+  formatSatsAsUsd(value: string, price: number | null): string {
+    if (price === null || !Number.isFinite(price)) return '—';
+    return this.formatUsd((Number(value || 0) / 100_000_000) * price);
+  }
+
+  valuationPrice(position: PumpologiaPositionsResponse['items'][number]): number | null {
+    return position.exit_price_usd ?? position.mark_price_usd ?? position.entry_price_usd;
   }
 
   pnlClass(value: string | null): string {

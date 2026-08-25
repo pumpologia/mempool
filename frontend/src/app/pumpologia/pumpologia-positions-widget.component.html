@@ -33,9 +33,9 @@
                   </a>
                 </td>
                 <td><span class="badge side-badge" [class.short]="position.side === 'short'">{{ position.side }}</span></td>
-                <td class="text-end numeric">{{ formatSats(position.margin_sats) }} <small>sats</small></td>
+                <td class="text-end numeric">{{ formatSatsAsUsd(position.margin_sats, valuationPrice(position)) }}</td>
                 <td class="text-end numeric">{{ position.leverage | number }}×</td>
-                <td class="text-end numeric optional-column">{{ formatSats(position.notional_sats) }} <small>sats</small></td>
+                <td class="text-end numeric optional-column">{{ formatSatsAsUsd(position.notional_sats, valuationPrice(position)) }}</td>
                 <td class="text-end numeric">{{ formatUsd(position.entry_price_usd) }}</td>
                 <td class="text-end numeric optional-column">{{ formatUsd(position.mark_price_usd) }}</td>
                 <td class="text-end numeric" [ngClass]="pnlClass(position.pnl_usd)">
