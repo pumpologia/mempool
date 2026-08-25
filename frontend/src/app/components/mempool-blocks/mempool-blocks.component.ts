@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, HostListener, Input, OnChanges, SimpleChanges, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
-import { Subscription, Observable, of, combineLatest } from 'rxjs';
+import { Subscription, Observable, combineLatest } from 'rxjs';
 import { MempoolBlock } from '@interfaces/websocket.interface';
 import { StateService } from '@app/services/state.service';
 import { EtaService } from '@app/services/eta.service';
 import { Router } from '@angular/router';
-import { delay, filter, map, switchMap, tap } from 'rxjs/operators';
+import { delay, filter, map, tap } from 'rxjs/operators';
 import { feeLevels } from '@app/app.constants';
 import { specialBlocks } from '@app/app.constants';
 import { RelativeUrlPipe } from '@app/shared/pipes/relative-url/relative-url.pipe';
@@ -155,11 +155,12 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
     });
     this.loadingBlocks$ = combineLatest([
       this.stateService.isLoadingWebSocket$,
-      this.stateService.isLoadingMempool$
+      this.stateService.isLoadingMempool$,
+      this.stateService.mempoolBlocks$,
     ]).pipe(
-      switchMap(([loadingBlocks, loadingMempool]) => {
-        return of(loadingBlocks || loadingMempool);
-      })
+      map(([loadingWebSocket, loadingMempool, mempoolBlocks]) =>
+        loadingWebSocket || (loadingMempool && mempoolBlocks.length === 0)
+      )
     );
 
     this.mempoolBlocks$ = combineLatest([
