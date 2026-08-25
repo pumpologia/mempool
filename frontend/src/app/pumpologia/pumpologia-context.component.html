@@ -24,7 +24,7 @@
           <span>{{ operationPnlLabel(operation) }}</span>
           <strong>{{ formatUsd(operation.pnl_usd) }}</strong>
         </span>
-        <span class="side-pill" [class.short]="operation.side === 'short'">
+        <span *ngIf="operation.side && operationEventKind(operation) !== 'long' && operationEventKind(operation) !== 'short'" class="side-pill" [class.short]="operation.side === 'short'">
           {{ operation.side || operation.type }}
         </span>
       </div>
