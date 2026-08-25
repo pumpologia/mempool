@@ -73,7 +73,7 @@ export class PumpologiaExplorerComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.seoService.setTitle(this.pageKind === 'position' ? 'Pumpologia Position' : 'Pumpologia Trading Terminal');
+    this.seoService.setTitle(this.pageKind === 'position' ? 'Pumpologia Position' : 'Pumpologia Markets');
     this.seoService.setDescription('Track Pumpologia perpetual positions, leverage, margin, notional exposure and P&L anchored to Bitcoin.');
     this.summary$.pipe(takeUntil(this.destroy$)).subscribe();
     if (this.initialSection) {

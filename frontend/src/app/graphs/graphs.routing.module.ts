@@ -17,6 +17,8 @@ import { PoolRankingComponent } from '@components/pool-ranking/pool-ranking.comp
 import { PoolComponent } from '@components/pool/pool.component';
 import { StartComponent } from '@components/start/start.component';
 import { StatisticsComponent } from '@components/statistics/statistics.component';
+import { DashboardComponent } from '@app/dashboard/dashboard.component';
+import { CustomDashboardComponent } from '@components/custom-dashboard/custom-dashboard.component';
 import { TreasuriesComponent } from '@components/treasuries/treasuries.component';
 import { AccelerationFeesGraphComponent } from '@components/acceleration/acceleration-fees-graph/acceleration-fees-graph.component';
 import { AccelerationsListComponent } from '@components/acceleration/accelerations-list/accelerations-list.component';
@@ -26,34 +28,31 @@ import { CalculatorComponent } from '@components/calculator/calculator.component
 import { BlockGogglesGraphComponent } from '@components/block-goggles-graph/block-goggles-graph.component';
 import { PumpologiaExplorerComponent } from '@app/pumpologia/pumpologia-explorer.component';
 
+const browserWindow = window || {};
+// @ts-ignore
+const browserWindowEnv = browserWindow.__env || {};
+const isCustomized = browserWindowEnv?.customize?.dashboard;
+
 const routes: Routes = [
   {
     path: '',
     children: [
       {
-        path: 'protocol/position/:positionId',
-        component: PumpologiaExplorerComponent,
-        data: { kind: 'position' },
-      },
-      {
-        path: 'protocol/positions',
-        component: PumpologiaExplorerComponent,
-        data: { kind: 'overview', section: 'positions' },
-      },
-      {
-        path: 'protocol/leaderboard',
-        component: PumpologiaExplorerComponent,
-        data: { kind: 'overview', section: 'leaderboard' },
-      },
-      {
-        path: 'protocol/activity',
-        component: PumpologiaExplorerComponent,
-        data: { kind: 'overview', section: 'activity' },
-      },
-      {
         path: 'protocol',
-        component: PumpologiaExplorerComponent,
-        data: { kind: 'overview' },
+        component: StartComponent,
+        children: [
+          { path: '', component: PumpologiaExplorerComponent, data: { kind: 'overview' } },
+          { path: 'positions', component: PumpologiaExplorerComponent, data: { kind: 'overview', section: 'positions' } },
+          { path: 'leaderboard', component: PumpologiaExplorerComponent, data: { kind: 'overview', section: 'leaderboard' } },
+          { path: 'activity', component: PumpologiaExplorerComponent, data: { kind: 'overview', section: 'operations' } },
+          { path: 'position/:positionId', component: PumpologiaExplorerComponent, data: { kind: 'position' } },
+          { path: 'tokens', redirectTo: '', pathMatch: 'full' },
+          { path: 'token/:tokenId', redirectTo: '', pathMatch: 'full' },
+          { path: 'ticker/:tick', redirectTo: '', pathMatch: 'full' },
+          { path: 'account/:ownerScriptHash', redirectTo: '', pathMatch: 'full' },
+          { path: 'operation/:txid', redirectTo: '', pathMatch: 'full' },
+          { path: 'oracle/:height', redirectTo: '', pathMatch: 'full' },
+        ],
       },
       {
         path: 'tools/calculator',
@@ -208,9 +207,11 @@ const routes: Routes = [
       },
       {
         path: '',
-        pathMatch: 'full',
-        component: PumpologiaExplorerComponent,
-        data: { kind: 'overview' },
+        component: StartComponent,
+        children: [{
+          path: '',
+          component: isCustomized ? CustomDashboardComponent : DashboardComponent,
+        }]
       },
     ]
   },

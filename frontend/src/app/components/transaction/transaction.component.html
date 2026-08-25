@@ -1,4 +1,4 @@
-<div class="container-xl" [class.pumpologia-only]="pumpologiaMatch">
+<div class="container-xl">
 
   <div class="title-block">
     <div *ngIf="rbfTransaction && !tx?.status?.confirmed" class="alert alert-mempool" role="alert">
@@ -31,7 +31,7 @@
   </div>
   <div class="clearfix"></div>
 
-  <app-pumpologia-context *ngIf="network === ''" [txid]="txId" (matchChange)="pumpologiaMatch = $event"></app-pumpologia-context>
+  <app-pumpologia-context *ngIf="network === ''" [txid]="txId"></app-pumpologia-context>
 
   @if (duplicateTxBlocks) {
     <div class="box duplicate-tx-alert">

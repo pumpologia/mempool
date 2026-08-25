@@ -78,7 +78,7 @@
   </div>
 
   <div class="navbar-collapse" id="navbarCollapse">
-    <ul *ngIf="!pumpologiaBuild" class="navbar-nav {{ network.val }}">
+    <ul class="navbar-nav {{ network.val }}">
 
       <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-home">
         <a class="nav-link" [routerLink]="['/' | relativeUrl]" (click)="collapse()">
@@ -137,20 +137,6 @@
         </a>
       </li>
     </ul>
-    <ul *ngIf="pumpologiaBuild" class="navbar-nav terminal-nav {{ network.val }}">
-      <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-        <a class="nav-link" [routerLink]="['/' | relativeUrl]" (click)="collapse()">Terminal</a>
-      </li>
-      <li class="nav-item" routerLinkActive="active">
-        <a class="nav-link" [routerLink]="['/protocol/positions' | relativeUrl]" (click)="collapse()">Positions</a>
-      </li>
-      <li class="nav-item" routerLinkActive="active">
-        <a class="nav-link" [routerLink]="['/protocol/leaderboard' | relativeUrl]" (click)="collapse()">Leaders</a>
-      </li>
-      <li class="nav-item" routerLinkActive="active">
-        <a class="nav-link" [routerLink]="['/protocol/activity' | relativeUrl]" (click)="collapse()">Activity</a>
-      </li>
-    </ul>
     <app-search-form [hamburgerOpen]="enterpriseInfo === null && user != null" class="search-form-container" location="top" (searchTriggered)="collapse()"></app-search-form>
   </div>
 </nav>
@@ -168,7 +154,7 @@
     </main>
 
     <div class="flex-grow-1"></div>
-    <app-global-footer *ngIf="footerVisible && !pumpologiaBuild" [user]="user"></app-global-footer>
+    <app-global-footer *ngIf="footerVisible" [user]="user"></app-global-footer>
   </div>
 </div>
 

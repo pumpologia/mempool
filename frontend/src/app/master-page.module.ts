@@ -5,7 +5,11 @@ import { MasterPageComponent } from '@components/master-page/master-page.compone
 import { SharedModule } from '@app/shared/shared.module';
 
 import { StartComponent } from '@components/start/start.component';
+import { PushTransactionComponent } from '@components/push-transaction/push-transaction.component';
+import { TestTransactionsComponent } from '@components/test-transactions/test-transactions.component';
 import { BlocksList } from '@components/blocks-list/blocks-list.component';
+import { RbfList } from '@components/rbf-list/rbf-list.component';
+import { RecentTransactionsList } from '@components/recent-transactions-list/recent-transactions-list.component';
 import { StaleList } from '@components/stale-list/stale-list.component';
 import { StratumList } from '@components/stratum/stratum-list/stratum-list.component';
 import { ServerHealthComponent } from '@components/server-health/server-health.component';
@@ -30,18 +34,15 @@ const routes: Routes = [
       },
       {
         path: 'tx/push',
-        redirectTo: 'protocol',
-        pathMatch: 'full',
+        component: PushTransactionComponent,
       },
       {
         path: 'pushtx',
-        redirectTo: 'protocol',
-        pathMatch: 'full',
+        component: PushTransactionComponent,
       },
       {
         path: 'tx/test',
-        redirectTo: 'protocol',
-        pathMatch: 'full',
+        component: TestTransactionsComponent,
       },
       {
         path: 'about',
@@ -61,13 +62,11 @@ const routes: Routes = [
       },
       {
         path: 'rbf',
-        redirectTo: 'protocol',
-        pathMatch: 'full',
+        component: RbfList,
       },
       {
         path: 'txs',
-        redirectTo: 'protocol',
-        pathMatch: 'full',
+        component: RecentTransactionsList,
       },
       ...(browserWindowEnv.STRATUM_ENABLED ? [{
         path: 'stratum',
@@ -105,13 +104,12 @@ const routes: Routes = [
       },
       {
         path: 'docs',
-        redirectTo: 'protocol',
-        pathMatch: 'full',
+        loadChildren: () => import('@app/docs/docs.module').then(m => m.DocsModule),
+        data: { preload: true },
       },
       {
         path: 'api',
-        redirectTo: 'protocol',
-        pathMatch: 'full',
+        loadChildren: () => import('@app/docs/docs.module').then(m => m.DocsModule)
       },
       {
         path: 'lightning',

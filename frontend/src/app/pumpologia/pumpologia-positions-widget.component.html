@@ -1,0 +1,63 @@
+<section class="pumpologia-positions-widget" aria-labelledby="pumpologia-positions-title">
+  <div class="main-title">Pumpologia positions</div>
+  <div class="card">
+    <div class="card-body">
+      <div class="widget-heading">
+        <div>
+          <h5 id="pumpologia-positions-title" class="card-title">Open perpetual positions</h5>
+          <p>Margin, leverage, exposure and P&amp;L from the Pumpologia indexer.</p>
+        </div>
+        <a class="title-link" [routerLink]="['/protocol/positions' | relativeUrl]">View all&nbsp;↗</a>
+      </div>
+
+      <ng-container *ngIf="positions$ | async as response; else positionsUnavailable">
+        <div class="table-responsive" *ngIf="response.items.length; else noOpenPositions">
+          <table class="table positions-table">
+            <thead>
+              <tr>
+                <th>Market</th>
+                <th>Side</th>
+                <th class="text-end">Margin</th>
+                <th class="text-end">Leverage</th>
+                <th class="text-end optional-column">Notional</th>
+                <th class="text-end">Entry</th>
+                <th class="text-end optional-column">Mark</th>
+                <th class="text-end">P&amp;L</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let position of response.items">
+                <td>
+                  <a class="market-link" [routerLink]="['/protocol/position' | relativeUrl, position.position_id]">
+                    {{ position.market }} <span>/ USD</span>
+                  </a>
+                </td>
+                <td><span class="badge side-badge" [class.short]="position.side === 'short'">{{ position.side }}</span></td>
+                <td class="text-end numeric">{{ formatSats(position.margin_sats) }} <small>sats</small></td>
+                <td class="text-end numeric">{{ position.leverage | number }}×</td>
+                <td class="text-end numeric optional-column">{{ formatSats(position.notional_sats) }} <small>sats</small></td>
+                <td class="text-end numeric">{{ formatUsd(position.entry_price_usd) }}</td>
+                <td class="text-end numeric optional-column">{{ formatUsd(position.mark_price_usd) }}</td>
+                <td class="text-end numeric" [ngClass]="pnlClass(position.pnl_usd)">
+                  {{ formatUsd(position.pnl_usd) }}
+                  <small>{{ position.pnl_kind }}</small>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</section>
+
+<ng-template #noOpenPositions>
+  <div class="widget-state">No open Pumpologia position at this indexed block.</div>
+</ng-template>
+
+<ng-template #positionsUnavailable>
+  <div class="widget-state">
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+    Loading Pumpologia positions…
+  </div>
+</ng-template>

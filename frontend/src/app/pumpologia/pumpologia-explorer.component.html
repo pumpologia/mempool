@@ -1,11 +1,11 @@
 <div class="container-xl protocol-page">
   <header class="terminal-hero">
     <div class="hero-copy">
-      <a *ngIf="pageKind === 'position'" class="back-link" [routerLink]="['/' | relativeUrl]">← Back to terminal</a>
+      <a *ngIf="pageKind === 'position'" class="back-link" [routerLink]="['/' | relativeUrl]">← Back to explorer</a>
       <div class="eyebrow">Pumpologia · Perpetual markets on Bitcoin</div>
-      <h1 *ngIf="pageKind === 'overview'">Trade activity,<br><em>made visible.</em></h1>
+      <h1 *ngIf="pageKind === 'overview'">Pumpologia positions,<br><em>made visible.</em></h1>
       <h1 *ngIf="pageKind === 'position'">Position<br><em>overview.</em></h1>
-      <p *ngIf="pageKind === 'overview'">Follow every Pumpologia position from opening margin to final P&amp;L. The Bitcoin chain remains the verifiable execution trail—not the product interface.</p>
+      <p *ngIf="pageKind === 'overview'">Follow every Pumpologia position from opening margin to final P&amp;L while retaining the Bitcoin explorer and its verifiable execution trail.</p>
       <p *ngIf="pageKind === 'position'">A focused view of exposure, risk parameters, performance and its Bitcoin anchor.</p>
     </div>
     <ng-container *ngIf="summary$ | async as summary">

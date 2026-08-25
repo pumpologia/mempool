@@ -1,0 +1,122 @@
+.pumpologia-positions-widget {
+  margin: 0 0 1.6rem;
+  text-align: left;
+}
+
+.card {
+  border-color: var(--border-subtle);
+  box-shadow: 0 8px 28px rgba(77, 59, 39, 0.06);
+}
+
+.widget-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.widget-heading p {
+  color: var(--transparent-fg);
+  font-size: 0.82rem;
+  margin: 0.25rem 0 0;
+}
+
+.title-link {
+  color: var(--orange);
+  flex: 0 0 auto;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.positions-table {
+  margin-bottom: 0;
+  min-width: 840px;
+}
+
+.positions-table th {
+  border-top: 0;
+  color: var(--transparent-fg);
+  font-size: 0.68rem;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.positions-table td {
+  border-color: var(--border-subtle);
+  vertical-align: middle;
+}
+
+.market-link {
+  color: var(--fg);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.market-link span,
+.numeric small {
+  color: var(--transparent-fg);
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 400;
+}
+
+.market-link span {
+  display: inline;
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.side-badge {
+  background: rgba(0, 180, 120, 0.12);
+  border: 1px solid rgba(0, 180, 120, 0.26);
+  color: #07855d;
+  text-transform: uppercase;
+}
+
+.side-badge.short {
+  background: rgba(220, 65, 65, 0.1);
+  border-color: rgba(220, 65, 65, 0.24);
+  color: #c33f3f;
+}
+
+.positive {
+  color: #07855d;
+  font-weight: 700;
+}
+
+.negative {
+  color: #c33f3f;
+  font-weight: 700;
+}
+
+.widget-state {
+  align-items: center;
+  color: var(--transparent-fg);
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  min-height: 7rem;
+  text-align: center;
+}
+
+@media (max-width: 767.98px) {
+  .widget-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .optional-column {
+    display: none;
+  }
+
+  .positions-table {
+    min-width: 610px;
+  }
+}
