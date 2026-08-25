@@ -33,6 +33,19 @@ const MAX_TRANSACTION_TIMES = 100;
 const BLOCK_TRANSACTIONS_PAGE_SIZE = 10;
 const JUST_NUMBERS_REGEX = /^[1-9]\d*$/;
 
+function canServeFeeProjection(res: Response): boolean {
+  if (mempool.isInSync()) {
+    return true;
+  }
+  if (mempoolBlocks.getMempoolBlocks().length) {
+    res.setHeader('X-Mempool-Data-State', 'cached');
+    return true;
+  }
+  res.statusCode = 503;
+  res.send('Service Unavailable');
+  return false;
+}
+
 class BitcoinRoutes {
   public initRoutes(app: Application) {
     app
@@ -124,9 +137,7 @@ class BitcoinRoutes {
   }
 
   private getRecommendedFees(req: Request, res: Response) {
-    if (!mempool.isInSync()) {
-      res.statusCode = 503;
-      res.send('Service Unavailable');
+    if (!canServeFeeProjection(res)) {
       return;
     }
     const result = feeApi.getRecommendedFee();
@@ -134,9 +145,7 @@ class BitcoinRoutes {
   }
 
   private getPreciseRecommendedFees(req: Request, res: Response) {
-    if (!mempool.isInSync()) {
-      res.statusCode = 503;
-      res.send('Service Unavailable');
+    if (!canServeFeeProjection(res)) {
       return;
     }
     const result = feeApi.getPreciseRecommendedFee();
@@ -144,9 +153,7 @@ class BitcoinRoutes {
   }
 
   private getPreciseRecommendedFeesEsploraTransformed(req: Request, res: Response) {
-    if (!mempool.isInSync()) {
-      res.statusCode = 503;
-      res.send('Service Unavailable');
+    if (!canServeFeeProjection(res)) {
       return;
     }
     const result = feeApi.getPreciseRecommendedFee();
