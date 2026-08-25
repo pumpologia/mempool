@@ -85,7 +85,7 @@ class PumpologiaRoutes {
       const series = Array.isArray(data.series) ? data.series.map(item => this.asRecord(item)) : [];
       const priceSeries = series.find(item => this.text(item.id) === 'price');
       const referenceSeries = series.find(item => this.text(item.id) === 'mempool');
-      const candles = (Array.isArray(priceSeries?.data) ? priceSeries.data : [])
+      const candles = (priceSeries && Array.isArray(priceSeries.data) ? priceSeries.data : [])
         .map(point => this.asRecord(point))
         .map(point => ({
           time: this.number(point.time),
@@ -96,7 +96,7 @@ class PumpologiaRoutes {
         }))
         .filter(point => point.time > 0 && point.open !== null && point.high !== null
           && point.low !== null && point.close !== null);
-      const reference = (Array.isArray(referenceSeries?.data) ? referenceSeries.data : [])
+      const reference = (referenceSeries && Array.isArray(referenceSeries.data) ? referenceSeries.data : [])
         .map(point => this.asRecord(point))
         .map(point => ({ time: this.number(point.time), value: this.nullableNumber(point.value) }))
         .filter(point => point.time > 0 && point.value !== null);
