@@ -1,3 +1,4 @@
+<ng-container *ngIf="!pumpologiaBlockPage">
 <app-indexing-progress *ngIf="showLoadingIndicator"></app-indexing-progress>
 
 <ng-container *ngIf="specialEvent">
@@ -39,6 +40,7 @@
   <!-- disgusting hack to apply an initial scroll to server-side rendered blockchain bar -->
   <img *ngIf="!stateService.isLiquid()" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="pixel" style="visibility: hidden; position: absolute;" onload="(() => { const b = document.getElementById('blockchain-container'); const d = document.getElementById('divider'); if (b && d) { b.scrollLeft = d.getBoundingClientRect().x - (window.innerWidth * (window.innerWidth >= 768 ? 0.5 : 0.95)); }})()">
   <img *ngIf="stateService.isLiquid()" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="pixel" style="visibility: hidden; position: absolute;" onload="(() => { const b = document.getElementById('blockchain-container'); const d = document.getElementById('divider'); if (b && d) { b.scrollLeft = d.getBoundingClientRect().x - (window.innerWidth >= 768 ? 420 : (window.innerWidth * 0.5)); }})()">
+</ng-container>
 </ng-container>
 
 <router-outlet></router-outlet>

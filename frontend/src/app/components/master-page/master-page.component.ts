@@ -84,6 +84,11 @@ export class MasterPageComponent implements OnInit, OnDestroy {
     return this.stateService.networkDisplayName;
   }
 
+  get pumpologiaBlockPage(): boolean {
+    return this.stateService.env.customize?.enterprise === 'pumpologia'
+      && /(^|\/)block\/[^/?]+/.test(this.router.url);
+  }
+
   setDropdownVisibility(): void {
     const networks = [
       this.env.TESTNET_ENABLED,
