@@ -121,7 +121,7 @@ $link-hover: #ffffff;
   --mempool-block-loading: #41413f;
   --alert-bg: #191918;
   --transparent-fg: #{$muted};
-  --footer-fg: #73736f;
+  --footer-fg: #{$muted};
   --fade-out-box-bg-start: rgba(17, 17, 17, 0);
   --fade-out-box-bg-end: rgba(17, 17, 17, 1);
   --opacity: 0.62;
@@ -557,6 +557,11 @@ app-footer .bg-warning,
 app-footer .bg-danger {
   background-color: $paper !important;
   color: $ink !important;
+}
+
+app-footer a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
 }
 
 hr {

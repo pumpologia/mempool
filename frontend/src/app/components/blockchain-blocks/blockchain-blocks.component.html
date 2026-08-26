@@ -15,7 +15,7 @@
         [style]="blockTransformation"
         [class.blink-bg]="isSpecial(block.height)">
         <a draggable="false" [routerLink]="[getHref(i, block) | relativeUrl]" [state]="{ data: { block: block } }"
-          class="blockLink" [ngClass]="{'disabled': (this.stateService.blockScrolling$ | async)}">&nbsp;</a>
+          class="blockLink" [attr.aria-label]="'Open confirmed block ' + block.height" [ngClass]="{'disabled': (this.stateService.blockScrolling$ | async)}">&nbsp;</a>
         <div *ngIf="!minimal" [attr.data-cy]="'bitcoin-block-' + i + '-height'" class="block-height">
           <a [routerLink]="[getHref(i, block) | relativeUrl]" [state]="{ data: { block: block } }" class="block-height-link">{{ block.height
             }}</a>
@@ -57,6 +57,7 @@
             <div [attr.data-cy]="'bitcoin-block-' + offset + '-index-' + i + '-time'" class="time-difference">
               <app-time kind="since" [time]="block.timestamp" [fastRender]="true" [precision]="1" minUnit="minute"></app-time>
               <a *ngIf="!minimal && showIsEarlierThanParent(i)" [routerLink]="['/docs/faq' | relativeUrl ]" class="timestamp-info" fragment="why-block-timestamps-dont-always-increase">
+                <span class="visually-hidden">Why block timestamps can differ</span>
                 <fa-icon [icon]="['fas', 'info-circle']" [fixedWidth]="true"></fa-icon>
               </a>
             </div>

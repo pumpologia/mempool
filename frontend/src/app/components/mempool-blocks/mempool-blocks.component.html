@@ -9,7 +9,7 @@
         ></div>
         <div @blockEntryTrigger [@.disabled]="i > 0 || !animateEntry" [attr.data-cy]="'mempool-block-' + i" class="bitcoin-block text-center mempool-block" [class.hide-block]="count && i >= count" id="mempool-block-{{ i }}" [ngStyle]="mempoolBlockStyles[i]" [class.blink-bg]="projectedBlock.blink" [style]="blockTransformation">
           <a draggable="false" [routerLink]="[getHref(i) | relativeUrl]"
-            class="blockLink" [ngClass]="{'disabled': (this.stateService.blockScrolling$ | async)}">&nbsp;</a>
+            class="blockLink" [attr.aria-label]="'Open projected block ' + (i + 1)" [ngClass]="{'disabled': (this.stateService.blockScrolling$ | async)}">&nbsp;</a>
           <div class="block-body">
             <ng-container *ngIf="!minimal">
               <div [attr.data-cy]="'mempool-block-' + i + '-fees'" class="fees">
