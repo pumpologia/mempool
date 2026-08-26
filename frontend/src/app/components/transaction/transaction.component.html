@@ -31,7 +31,7 @@
   </div>
   <div class="clearfix"></div>
 
-  <app-pumpologia-context *ngIf="network === ''" [txid]="txId" [transaction]="tx"></app-pumpologia-context>
+  <app-pumpologia-context *ngIf="network === ''" [txid]="txId" [transaction]="tx" (matchChange)="setPumpologiaLineageAvailable($event)"></app-pumpologia-context>
 
   @if (duplicateTxBlocks) {
     <div class="box duplicate-tx-alert">
@@ -152,7 +152,7 @@
       <br>
     </ng-container>
 
-    <ng-container *ngIf="flowEnabled; else flowPlaceholder">
+    <ng-container *ngIf="showClassicTransactionFlow && flowEnabled; else flowPlaceholder">
       <div class="title float-start">
         <h2 id="flow" #flow class="anchor" i18n="transaction.flow|Transaction flow">Flow</h2>
       </div>
@@ -200,7 +200,7 @@
       </div>
 
       <div class="title-buttons">
-        <button *ngIf="!flowEnabled" type="button" class="btn btn-outline-info flow-toggle btn-sm" (click)="toggleGraph()" i18n="show-diagram">Show diagram</button>
+        <button *ngIf="showClassicTransactionFlow && !flowEnabled" type="button" class="btn btn-outline-info flow-toggle btn-sm" (click)="toggleGraph()" i18n="show-diagram">Show diagram</button>
         <button type="button" class="btn btn-outline-info btn-sm" (click)="toggleDetailsFromTxPage()" i18n="transaction.details|Transaction Details">Details</button>
       </div>
     </div>
@@ -272,7 +272,7 @@
 
   <ng-template [ngIf]="(isLoadingTx && !error) || loadingCachedTx">
     <br>
-    <ng-container *ngIf="flowEnabled">
+    <ng-container *ngIf="showClassicTransactionFlow && flowEnabled">
       <div class="title">
         <h2 i18n="transaction.flow|Transaction flow">Flow</h2>
       </div>

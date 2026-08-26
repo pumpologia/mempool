@@ -100,7 +100,7 @@ export class PumpologiaTransactionLineageComponent implements OnChanges, OnDestr
   }
 
   get canvasHeight(): number {
-    return Math.max(390, Math.max(this.visibleInputs.length, this.visibleOutputs.length) * 72 + 76);
+    return Math.max(470, Math.max(this.visibleInputs.length, this.visibleOutputs.length) * 96 + 112);
   }
 
   get centerY(): number {
@@ -129,12 +129,12 @@ export class PumpologiaTransactionLineageComponent implements OnChanges, OnDestr
 
   inputPath(index: number): string {
     const y = this.branchY(index, this.visibleInputs.length);
-    return `M 238 ${y} C 350 ${y}, 390 ${this.centerY}, 488 ${this.centerY}`;
+    return `M 312 ${y} C 372 ${y}, 420 ${this.centerY}, 456 ${this.centerY}`;
   }
 
   outputPath(index: number): string {
     const y = this.branchY(index, this.visibleOutputs.length);
-    return `M 712 ${this.centerY} C 810 ${this.centerY}, 850 ${y}, 962 ${y}`;
+    return `M 744 ${this.centerY} C 780 ${this.centerY}, 828 ${y}, 888 ${y}`;
   }
 
   isPositionInput(input: Vin): boolean {

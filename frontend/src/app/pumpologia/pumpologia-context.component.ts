@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, Output } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -89,8 +90,8 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
   private loadTransactionOperation(): void {
     this.pumpologiaApi.getOperation$(this.txid as string).pipe(
       tap(() => { this.hasError = false; }),
-      catchError(() => {
-        this.hasError = true;
+      catchError((error: unknown) => {
+        this.hasError = !(error instanceof HttpErrorResponse && error.status === 404);
         return of(null);
       }),
       takeUntil(this.requestChanged$),

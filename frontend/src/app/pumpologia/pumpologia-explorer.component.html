@@ -1,13 +1,4 @@
 <div class="container-xl protocol-page">
-  <header *ngIf="pageKind === 'position'" class="terminal-hero position-hero">
-    <div class="hero-copy">
-      <a class="back-link" [routerLink]="['/protocol' | relativeUrl]">← Back to activity</a>
-      <div class="eyebrow">Pumpologia position</div>
-      <h1>Position<br><em>overview.</em></h1>
-      <p>A focused view of exposure, risk parameters, performance and its Bitcoin anchor.</p>
-    </div>
-  </header>
-
   <ng-container *ngIf="pageKind === 'overview'; else positionView">
     <ng-container *ngIf="summary$ | async as summary; else loadingSummary">
       <section class="terminal-metrics" aria-label="Pumpologia market summary">

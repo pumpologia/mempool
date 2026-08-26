@@ -49,13 +49,13 @@
         <path *ngFor="let output of visibleOutputs; let index = index" [attr.d]="outputPath(index)" class="output-path" [class.protocol-path]="isPositionOutput(index) || output.scriptpubkey_type === 'op_return'"></path>
       </svg>
 
-      <a *ngFor="let input of visibleInputs; let index = index" class="branch-node input-node" [class.protocol-node]="isPositionInput(input)" [style.top.px]="branchY(index, visibleInputs.length) - 29" [routerLink]="['/tx', input.txid]" [attr.aria-label]="inputRole(input) + ' ' + (index + 1)">
+      <a *ngFor="let input of visibleInputs; let index = index" class="branch-node input-node" [class.protocol-node]="isPositionInput(input)" [style.top.px]="branchY(index, visibleInputs.length) - 38" [routerLink]="['/tx', input.txid]" [attr.aria-label]="inputRole(input) + ' ' + (index + 1)" [title]="input.txid + ':' + input.vout">
         <span>IN {{ index + 1 | number:'2.0-0' }} · {{ inputRole(input) }}</span>
         <strong>{{ shortHash(input.txid) }}:{{ input.vout }}</strong>
         <small>{{ formatBtc(input.prevout?.value) }}</small>
       </a>
 
-      <article class="operation-node" [style.top.px]="centerY - 84">
+      <article class="operation-node" [style.top.px]="centerY - 96">
         <span class="operation-icon" [attr.aria-label]="eventLabel()" [title]="eventLabel()">
           <fa-icon [icon]="['fas', eventIcon()]" [fixedWidth]="true"></fa-icon>
         </span>
@@ -70,7 +70,7 @@
         <small>{{ transaction.txid | slice:0:10 }}…{{ transaction.txid | slice:-8 }}</small>
       </article>
 
-      <a *ngFor="let output of visibleOutputs; let index = index" class="branch-node output-node" [class.protocol-node]="isPositionOutput(index) || output.scriptpubkey_type === 'op_return'" [class.spent-node]="outspends[index]?.spent" [style.top.px]="branchY(index, visibleOutputs.length) - 29" [routerLink]="outputLink(index)" [attr.aria-label]="outputRole(output, index) + ' ' + (index + 1)">
+      <a *ngFor="let output of visibleOutputs; let index = index" class="branch-node output-node" [class.protocol-node]="isPositionOutput(index) || output.scriptpubkey_type === 'op_return'" [class.spent-node]="outspends[index]?.spent" [style.top.px]="branchY(index, visibleOutputs.length) - 38" [routerLink]="outputLink(index)" [attr.aria-label]="outputRole(output, index) + ' ' + (index + 1)" [title]="outputRole(output, index)">
         <span>OUT {{ index + 1 | number:'2.0-0' }} · {{ outputRole(output, index) }}</span>
         <strong>{{ outspends[index]?.spent && outspends[index]?.txid ? shortHash(outspends[index].txid) : (output.scriptpubkey_type | uppercase) }}</strong>
         <small>{{ output.scriptpubkey_type === 'op_return' ? 'Decoded by Pumpologia' : formatBtc(output.value) }}</small>

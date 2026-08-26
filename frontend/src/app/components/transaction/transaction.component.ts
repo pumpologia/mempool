@@ -147,6 +147,8 @@ export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
   hideFlow: boolean = this.stateService.hideFlow.value;
   overrideFlowPreference: boolean = null;
   flowEnabled: boolean;
+  pumpologiaLineageAvailable = false;
+  pumpologiaLineageResolved = false;
   isDetailsOpen: boolean = false;
   tooltipPosition: { x: number, y: number };
   isMobile: boolean;
@@ -1076,6 +1078,8 @@ export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
     this.gotInitialPosition = false;
     this.error = undefined;
     this.tx = null;
+    this.pumpologiaLineageAvailable = false;
+    this.pumpologiaLineageResolved = false;
     this.txChanged$.next(true);
     this.setFeatures();
     this.waitingForTransaction = false;
@@ -1151,6 +1155,15 @@ export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
       queryParamsHandling: 'merge',
       fragment: this.formatFragment(this.fragmentParams, showFlow ? 'flow' : null)
     });
+  }
+
+  setPumpologiaLineageAvailable(available: boolean): void {
+    this.pumpologiaLineageAvailable = available;
+    this.pumpologiaLineageResolved = true;
+  }
+
+  get showClassicTransactionFlow(): boolean {
+    return this.network !== '' || (this.pumpologiaLineageResolved && !this.pumpologiaLineageAvailable);
   }
 
   setFlowEnabled() {
