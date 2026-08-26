@@ -6,7 +6,10 @@
 }
 
 .mobile-container {
-  width: 100vw;
+  // Follow the layout viewport rather than 100vw: desktop browsers reserve
+  // space for the vertical scrollbar, which otherwise creates a horizontal
+  // overflow on long Pumpologia transaction pages.
+  width: 100%;
   height: 100vh;
   height: 100svh;
   max-width: 600px;
