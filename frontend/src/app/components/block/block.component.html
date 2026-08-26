@@ -1,12 +1,14 @@
 <div class="container-xl" (window:resize)="onResize($event)">
 
   <div class="title-block" [class.time-ltr]="timeLtr" id="block">
-    <div *ngIf="block?.stale" class="alert alert-mempool" role="alert">
+    <div *ngIf="block?.stale && !showPumpologiaBlockView" class="alert alert-mempool" role="alert">
       <span i18n="block.reorged|Block reorg" class="alert-text">This block does not belong to the main chain, it has been replaced by:</span>
       <app-truncate [text]="block.canonical" [lastChars]="12" [link]="['/block/' | relativeUrl, block.canonical]" [maxWidth]="480"></app-truncate>
     </div>
     <h1>
-      @if (!block?.stale) {
+      @if (showPumpologiaBlockView) {
+        <ng-container>Pumpologia events</ng-container>
+      } @else if (!block?.stale) {
         <ng-container *ngIf="blockHeight == null || blockHeight > 0; else genesis" i18n="shared.block-title">Block</ng-container>
         <ng-template #genesis i18n="@@2303359202781425764">Genesis</ng-template>
       } @else {
@@ -31,12 +33,20 @@
 
     <div class="grow"></div>
 
-    <button *ngIf="block?.stale" type="button" class="btn btn-sm btn-danger container-button" i18n="block.stale|Stale block state">Stale</button>
+    <button *ngIf="block?.stale && !showPumpologiaBlockView" type="button" class="btn btn-sm btn-danger container-button" i18n="block.stale|Stale block state">Stale</button>
 
     <button [routerLink]="['/' | relativeUrl]" class="btn btn-sm">&#10005;</button>
   </div>
 
   <div class="clearfix"></div>
+
+  <app-pumpologia-context *ngIf="showPumpologiaBlockView && blockHeight != null && !error" [blockHeight]="blockHeight"></app-pumpologia-context>
+
+  <app-http-error *ngIf="showPumpologiaBlockView && error" [error]="error">
+    <span>Unable to load the Pumpologia block context.</span>
+  </app-http-error>
+
+  <ng-container *ngIf="!showPumpologiaBlockView">
 
   <div class="box" *ngIf="!error">
     <div class="row">
@@ -414,8 +424,6 @@
       >Details</button>
     </div>
 
-    <app-pumpologia-context *ngIf="network === '' && blockHeight != null" [blockHeight]="blockHeight"></app-pumpologia-context>
-
     @defer (on viewport) {
       @if (!block?.stale) {
       <app-block-transactions [paginationMaxSize]="paginationMaxSize" [block$]="block$" [txCount]="block.tx_count" [timestamp]="block.timestamp" [blockHash]="blockHash" [previousBlockHash]="block.previousblockhash" (blockReward)="updateBlockReward($event)"></app-block-transactions>
@@ -460,6 +468,7 @@
       <span i18n="block.error.loading-block-data">Error loading block data.</span>
     </app-http-error>
   </ng-template>
+  </ng-container>
 
 </div>
 

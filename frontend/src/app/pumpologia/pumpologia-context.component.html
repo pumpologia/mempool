@@ -1,13 +1,27 @@
-<section *ngIf="operations.length" class="pumpologia-context" [class.is-loading]="isLoading" aria-labelledby="pumpologia-context-title" [attr.aria-busy]="isLoading">
+<section *ngIf="operations.length || (!txid && blockHeight != null)" class="pumpologia-context" [class.is-loading]="isLoading" aria-labelledby="pumpologia-context-title" [attr.aria-busy]="isLoading">
   <div class="context-heading">
     <div>
-      <span class="context-kicker">Pumpologia position data</span>
-      <h2 id="pumpologia-context-title">{{ txid ? 'Trade in this transaction' : 'Pumpologia trades in this block' }}</h2>
+      <span class="context-kicker">Pumpologia protocol events</span>
+      <h2 id="pumpologia-context-title">{{ txid ? 'Trade in this transaction' : 'Activity indexed in this block' }}</h2>
     </div>
     <a [routerLink]="['/']">Open trading terminal →</a>
   </div>
 
-  <div class="context-operations">
+  <div *ngIf="isLoading && !operations.length" class="context-loading" aria-hidden="true">
+    <span class="skeleton-loader"></span>
+    <span class="skeleton-loader"></span>
+    <span class="skeleton-loader"></span>
+  </div>
+
+  <div *ngIf="!isLoading && !operations.length && !txid" class="context-empty">
+    <fa-icon [icon]="['fas', 'check']" [fixedWidth]="true"></fa-icon>
+    <div>
+      <strong>No Pumpologia events in this block</strong>
+      <span>The protocol indexer did not record a position event at height {{ blockHeight | number }}.</span>
+    </div>
+  </div>
+
+  <div *ngIf="operations.length" class="context-operations">
     <article *ngFor="let operation of operations" [ngClass]="'event-' + operationEventKind(operation)">
       <div class="trade-head">
         <div class="event-identity">

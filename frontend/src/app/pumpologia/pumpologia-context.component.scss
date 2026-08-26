@@ -15,6 +15,13 @@
 .context-heading h2 { color: var(--fg); font-family: var(--font-editorial); font-size: 1.55rem; font-weight: 500; letter-spacing: -.035em; margin: .25rem 0 0; }
 .context-kicker { color: var(--transparent-fg); font-size: .86rem; font-weight: 400; letter-spacing: .1em; text-transform: uppercase; }
 .context-heading a, .trade-links a { color: var(--fg); font-size: .88rem; font-weight: 400; letter-spacing: .045em; text-decoration: underline; text-transform: uppercase; text-underline-offset: .22em; }
+.context-loading { border: 1px solid var(--border-subtle); display: grid; gap: .7rem; margin-top: 1rem; padding: 1rem; }
+.context-loading .skeleton-loader { margin: 0; max-width: none; }
+.context-empty { align-items: center; border: 1px solid var(--border-subtle); color: var(--transparent-fg); display: flex; gap: .9rem; margin-top: 1rem; min-height: 6.5rem; padding: 1rem; }
+.context-empty > fa-icon { align-items: center; border: 1px solid var(--pump-neutral); color: var(--pump-neutral); display: inline-flex; flex: 0 0 auto; height: 2.2rem; justify-content: center; width: 2.2rem; }
+.context-empty div { display: flex; flex-direction: column; gap: .25rem; }
+.context-empty strong { color: var(--fg); font-family: var(--font-editorial); font-size: 1.1rem; font-weight: 500; }
+.context-empty span { font-size: .9rem; }
 .context-operations { border-left: 1px solid var(--border-subtle); border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; margin-top: 1rem; }
 .context-operations article { background: #111; border-bottom: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); border-radius: 0; border-top: 3px solid #555552; display: flex; flex-direction: column; min-width: 0; padding: 1rem; }
 .trade-head, .trade-head > div { align-items: center; display: flex; gap: .6rem; justify-content: space-between; }

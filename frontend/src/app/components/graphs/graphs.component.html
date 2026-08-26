@@ -1,4 +1,4 @@
-<div *ngIf="stateService.env.MINING_DASHBOARD || stateService.env.LIGHTNING || stateService.env.ACCELERATOR || (stateService.env.HISTORICAL_PRICE && isMainnet)" class="mb-3 d-flex menu" [style]="{'flex-wrap': flexWrap ? 'wrap' : ''}">
+<div *ngIf="stateService.env.customize?.enterprise !== 'pumpologia' && (stateService.env.MINING_DASHBOARD || stateService.env.LIGHTNING || stateService.env.ACCELERATOR || (stateService.env.HISTORICAL_PRICE && isMainnet))" class="mb-3 d-flex menu" [style]="{'flex-wrap': flexWrap ? 'wrap' : ''}">
 
   <a routerLinkActive="active" class="btn btn-primary w-33"
     [routerLink]="['/graphs/mempool' | relativeUrl]">Mempool</a>

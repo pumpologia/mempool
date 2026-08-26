@@ -32,6 +32,7 @@ const browserWindow = window || {};
 // @ts-ignore
 const browserWindowEnv = browserWindow.__env || {};
 const isCustomized = browserWindowEnv?.customize?.dashboard;
+const isPumpologia = browserWindowEnv?.customize?.enterprise === 'pumpologia';
 
 const routes: Routes = [
   {
@@ -54,6 +55,13 @@ const routes: Routes = [
           { path: 'oracle/:height', redirectTo: '', pathMatch: 'full' },
         ],
       },
+      ...(isPumpologia ? [
+        { path: 'mining', redirectTo: 'graphs/mempool', pathMatch: 'full' as const },
+        { path: 'mining/pool/:slug', redirectTo: 'graphs/mempool' },
+        { path: 'acceleration', redirectTo: 'graphs/mempool', pathMatch: 'full' as const },
+        { path: 'acceleration/list/:page', redirectTo: 'graphs/mempool' },
+        { path: 'acceleration/list', redirectTo: 'graphs/mempool' },
+      ] : []),
       {
         path: 'tools/calculator',
         component: CalculatorComponent
@@ -133,6 +141,20 @@ const routes: Routes = [
             data: { networks: ['bitcoin', 'liquid'] },
             component: PumpologiaBtcChartComponent,
           },
+          ...(isPumpologia ? [
+            { path: 'goggles', redirectTo: 'mempool' },
+            { path: 'mining/hashrate-difficulty', redirectTo: 'mempool' },
+            { path: 'mining/pools-dominance', redirectTo: 'mempool' },
+            { path: 'mining/pools', redirectTo: 'mempool' },
+            { path: 'mining/block-fees', redirectTo: 'mempool' },
+            { path: 'mining/block-fees-subsidy', redirectTo: 'mempool' },
+            { path: 'mining/block-rewards', redirectTo: 'mempool' },
+            { path: 'mining/block-fee-rates', redirectTo: 'mempool' },
+            { path: 'mining/block-sizes-weights', redirectTo: 'mempool' },
+            { path: 'mining/block-health', redirectTo: 'mempool' },
+            { path: 'acceleration/fees', redirectTo: 'mempool' },
+            { path: 'price', redirectTo: 'mempool' },
+          ] : []),
           {
             path: 'goggles',
             data: { networks: [ 'bitcoin' ]},

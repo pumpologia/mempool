@@ -100,25 +100,25 @@
           <span class="mobile-nav-label">Home</span>
         </a>
       </li>
-      <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-home" *ngIf="network.val === '' && stateService.env.ACCELERATOR">
+      <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-home" *ngIf="stateService.env.customize?.enterprise !== 'pumpologia' && network.val === '' && stateService.env.ACCELERATOR">
         <a class="nav-link" [routerLink]="['/acceleration' | relativeUrl]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-rocket" width="21.59" height="100%"></app-svg-images></div>
           <span class="mobile-nav-label">Accelerator</span>
         </a>
       </li>
-      <li class="nav-item mining" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-pools" *ngIf="stateService.env.MINING_DASHBOARD">
+      <li class="nav-item mining" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-pools" *ngIf="stateService.env.customize?.enterprise !== 'pumpologia' && stateService.env.MINING_DASHBOARD">
         <a class="nav-link" [routerLink]="['/mining' | relativeUrl]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-pickaxe" width="21.59" height="100%"></app-svg-images></div>
           <span class="mobile-nav-label">Mining</span>
         </a>
       </li>
-      <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-lightning" *ngIf="stateService.networkSupportsLightning()">
+      <li class="nav-item" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" id="btn-lightning" *ngIf="stateService.env.customize?.enterprise !== 'pumpologia' && stateService.networkSupportsLightning()">
         <a class="nav-link" [routerLink]="['/lightning' | relativeUrl]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-bolt" width="21.59" height="100%"></app-svg-images></div>
           <span class="mobile-nav-label">Lightning</span>
         </a>
       </li>
-      <li class="nav-item" routerLinkActive="active" id="btn-blocks" *ngIf="!stateService.env.MINING_DASHBOARD">
+      <li class="nav-item" routerLinkActive="active" id="btn-blocks" *ngIf="stateService.env.customize?.enterprise !== 'pumpologia' && !stateService.env.MINING_DASHBOARD">
         <a class="nav-link" [routerLink]="['/blocks' | relativeUrl]" (click)="collapse()">
           <div class="svg-wrapper"><app-svg-images name="nav-cubes" width="21.59" height="100%"></app-svg-images></div>
           <span class="mobile-nav-label">Blocks</span>

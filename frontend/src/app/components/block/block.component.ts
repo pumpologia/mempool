@@ -45,6 +45,7 @@ interface ComparisonStats {
 })
 export class BlockComponent implements OnInit, OnDestroy {
   network = '';
+  readonly pumpologiaCustomized = this.stateService.env.customize?.enterprise === 'pumpologia';
   block: BlockExtended;
   blockAudit: BlockAudit = undefined;
   blockHeight: number;
@@ -69,7 +70,7 @@ export class BlockComponent implements OnInit, OnDestroy {
   overviewError: any = null;
   webGlEnabled = true;
   auditParamEnabled: boolean = false;
-  auditSupported: boolean = this.stateService.env.AUDIT && this.stateService.env.BASE_MODULE === 'mempool' && this.stateService.env.MINING_DASHBOARD === true;
+  auditSupported: boolean = !this.pumpologiaCustomized && this.stateService.env.AUDIT && this.stateService.env.BASE_MODULE === 'mempool' && this.stateService.env.MINING_DASHBOARD === true;
   auditModeEnabled: boolean = !this.stateService.hideAudit.value;
   auditAvailable = true;
   showAudit: boolean;
@@ -129,6 +130,10 @@ export class BlockComponent implements OnInit, OnDestroy {
     return this.showAudit || this.block?.stale;
   }
 
+  get showPumpologiaBlockView(): boolean {
+    return this.pumpologiaCustomized && this.network === '';
+  }
+
   ngOnInit(): void {
     this.websocketService.want(['blocks', 'mempool-blocks']);
     this.network = this.stateService.network;
@@ -186,6 +191,8 @@ export class BlockComponent implements OnInit, OnDestroy {
       switchMap((params: ParamMap) => {
         const blockHash: string = params.get('id') || '';
         this.block = undefined;
+        this.blockHeight = undefined;
+        this.blockHash = undefined;
         this.error = undefined;
         this.fees = undefined;
         this.oobFees = 0;
@@ -266,7 +273,7 @@ export class BlockComponent implements OnInit, OnDestroy {
         }
       }),
       tap((block: BlockExtended) => {
-        if (block.previousblockhash) {
+        if (block.previousblockhash && !this.showPumpologiaBlockView) {
           this.preloadService.block$.next(block.previousblockhash);
           if (this.auditSupported) {
             this.preloadService.blockAudit$.next(block.previousblockhash);
@@ -283,10 +290,15 @@ export class BlockComponent implements OnInit, OnDestroy {
         this.nextBlockHeight = block.height + 1;
         this.setNextAndPreviousBlockLink();
 
-        this.seoService.setTitle($localize`:@@block.component.browser-title:Block ${block.height}:BLOCK_HEIGHT:: ${block.id}:BLOCK_ID:`);
-        if( this.stateService.network === 'liquid' || this.stateService.network === 'liquidtestnet' ) {
-          this.seoService.setDescription($localize`:@@meta.description.liquid.block:See size, weight, fee range, included transactions, and more for Liquid${seoDescriptionNetwork(this.stateService.network)} block ${block.height}:BLOCK_HEIGHT: (${block.id}:BLOCK_ID:).`);
+        if (this.showPumpologiaBlockView) {
+          this.seoService.setTitle(`Pumpologia events · Block ${block.height}`);
+          this.seoService.setDescription(`Pumpologia position and trading events indexed in block ${block.height}.`);
         } else {
+          this.seoService.setTitle($localize`:@@block.component.browser-title:Block ${block.height}:BLOCK_HEIGHT:: ${block.id}:BLOCK_ID:`);
+        }
+        if (!this.showPumpologiaBlockView && (this.stateService.network === 'liquid' || this.stateService.network === 'liquidtestnet')) {
+          this.seoService.setDescription($localize`:@@meta.description.liquid.block:See size, weight, fee range, included transactions, and more for Liquid${seoDescriptionNetwork(this.stateService.network)} block ${block.height}:BLOCK_HEIGHT: (${block.id}:BLOCK_ID:).`);
+        } else if (!this.showPumpologiaBlockView) {
           this.seoService.setDescription($localize`:@@meta.description.bitcoin.block:See size, weight, fee range, included transactions, audit (expected v actual), and more for Bitcoin${seoDescriptionNetwork(this.stateService.network)} block ${block.height}:BLOCK_HEIGHT: (${block.id}:BLOCK_ID:).`);
         }
         this.isLoadingBlock = false;
@@ -315,21 +327,21 @@ export class BlockComponent implements OnInit, OnDestroy {
       switchMap((block) => {
         return forkJoin([
           of(block),
-          this.apiService.getStrippedBlockTransactions$(block.id)
+          this.showPumpologiaBlockView ? of(null) : this.apiService.getStrippedBlockTransactions$(block.id)
             .pipe(
               catchError((err) => {
                 this.overviewError = err;
                 return of(null);
               })
             ),
-          !this.isAuditAvailableFromBlockHeight(block.height) ? of(null) : this.apiService.getBlockAudit$(block.id)
+          this.showPumpologiaBlockView || !this.isAuditAvailableFromBlockHeight(block.height) ? of(null) : this.apiService.getBlockAudit$(block.id)
             .pipe(
               catchError((err) => {
                 this.overviewError = err;
                 return of(null);
               })
             ),
-          block.stale ? this.electrsApiService.getBlockHashFromHeight$(block.height)
+          !this.showPumpologiaBlockView && block.stale ? this.electrsApiService.getBlockHashFromHeight$(block.height)
             .pipe(
               switchMap((hash) => {
                 return forkJoin([
@@ -385,7 +397,7 @@ export class BlockComponent implements OnInit, OnDestroy {
 
     this.accelerationsSubscription = this.block$.pipe(
       switchMap((block) => {
-        return this.stateService.env.ACCELERATOR === true && block.height > 819500 && this.stateService.network === ''
+        return !this.showPumpologiaBlockView && this.stateService.env.ACCELERATOR === true && block.height > 819500 && this.stateService.network === ''
           ? this.servicesApiService.getAllAccelerationHistory$({ blockHeight: block.height })
             .pipe(catchError(() => {
               return of([]);
@@ -400,7 +412,7 @@ export class BlockComponent implements OnInit, OnDestroy {
     });
 
     this.oobSubscription = this.block$.pipe(
-      filter(() => this.stateService.env.PUBLIC_ACCELERATIONS === true && this.stateService.network === ''),
+      filter(() => !this.showPumpologiaBlockView && this.stateService.env.PUBLIC_ACCELERATIONS === true && this.stateService.network === ''),
       switchMap((block) => this.apiService.getAccelerationsByHeight$(block.height)
         .pipe(
           map(accelerations => {
