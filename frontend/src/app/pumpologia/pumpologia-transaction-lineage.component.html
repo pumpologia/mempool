@@ -72,7 +72,7 @@
 
       <a *ngFor="let output of visibleOutputs; let index = index" class="branch-node output-node" [class.protocol-node]="isPositionOutput(index) || output.scriptpubkey_type === 'op_return'" [class.spent-node]="outspends[index]?.spent" [style.top.px]="branchY(index, visibleOutputs.length) - 29" [routerLink]="outputLink(index)" [attr.aria-label]="outputRole(output, index) + ' ' + (index + 1)">
         <span>OUT {{ index + 1 | number:'2.0-0' }} · {{ outputRole(output, index) }}</span>
-        <strong>{{ outspends[index]?.spent ? shortHash(outspends[index].txid) : (output.scriptpubkey_type | uppercase) }}</strong>
+        <strong>{{ outspends[index]?.spent && outspends[index]?.txid ? shortHash(outspends[index].txid) : (output.scriptpubkey_type | uppercase) }}</strong>
         <small>{{ output.scriptpubkey_type === 'op_return' ? 'Decoded by Pumpologia' : formatBtc(output.value) }}</small>
       </a>
 

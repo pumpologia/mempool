@@ -114,6 +114,7 @@ export class TrackerComponent implements OnInit, OnDestroy {
   now = Date.now();
   da$: Observable<DifficultyAdjustment>;
   isMobile: boolean;
+  isPumpologiaTransaction = false;
 
   trackerStage: TrackerStage = 'waiting';
 

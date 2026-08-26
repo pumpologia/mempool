@@ -1,5 +1,5 @@
 <div class="mobile-wrapper">
-  <div class="mobile-container">
+  <div class="mobile-container" [class.pumpologia-transaction]="isPumpologiaTransaction">
     <div class="panel">
       <div class="nav-header">
         @if (enterpriseInfo) {
@@ -110,6 +110,14 @@
         }
       </div>
     </div>
+
+    <app-pumpologia-context
+      *ngIf="network === ''"
+      class="tracker-protocol"
+      [txid]="txId"
+      [transaction]="tx"
+      (matchChange)="isPumpologiaTransaction = $event">
+    </app-pumpologia-context>
 
     <div class="bottom-panel" *ngIf="!error || waitingForTransaction">
       @if (isLoading) {

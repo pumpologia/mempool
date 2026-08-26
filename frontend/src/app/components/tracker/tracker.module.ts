@@ -7,6 +7,7 @@ import { GraphsModule } from '@app/graphs/graphs.module';
 import { TrackerComponent } from '@components/tracker/tracker.component';
 import { TrackerBarComponent } from '@components/tracker/tracker-bar.component';
 import { TransactionModule } from '@components/transaction/transaction.module';
+import { PumpologiaContextComponent } from '@app/pumpologia/pumpologia-context.component';
 
 const routes: Routes = [
   {
@@ -43,6 +44,7 @@ export class TrackerRoutingModule { }
     SharedModule,
     GraphsModule,
     TxBowtieModule,
+    PumpologiaContextComponent,
   ],
   declarations: [
     TrackerComponent,
@@ -50,7 +52,6 @@ export class TrackerRoutingModule { }
   ]
 })
 export class TrackerModule { }
-
 
 
 

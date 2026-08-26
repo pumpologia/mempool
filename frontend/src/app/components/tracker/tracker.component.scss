@@ -30,6 +30,22 @@
   }
 }
 
+.mobile-container.pumpologia-transaction {
+  height: auto;
+  max-height: none;
+  min-height: 100svh;
+
+  .bottom-panel {
+    flex-grow: 0;
+    min-height: 15rem;
+  }
+}
+
+.tracker-protocol {
+  display: block;
+  margin: 0 .65rem;
+}
+
 .heading {
   display: flex;
   flex-direction: row;
