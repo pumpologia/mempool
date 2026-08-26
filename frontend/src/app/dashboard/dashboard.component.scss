@@ -417,3 +417,18 @@
   padding-bottom: 3px;
   font-weight: 500;
 }
+.dashboard-deferred-placeholder {
+  border: 1px solid var(--border-subtle);
+  display: grid;
+  gap: .8rem;
+  margin-bottom: 1.5rem;
+  min-height: 12rem;
+  padding: 1.2rem;
+}
+
+.dashboard-deferred-placeholder .skeleton-loader {
+  margin: 0;
+  max-width: none;
+}
+
+.dashboard-deferred-placeholder .skeleton-loader:first-child { width: 42%; }

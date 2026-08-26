@@ -564,6 +564,18 @@ app-footer a {
   text-decoration-thickness: 1px;
 }
 
+app-global-footer a,
+app-global-footer footer .row.version p a {
+  color: $paper !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 1px !important;
+}
+
+app-dashboard .progress-bar.bg-warning {
+  background-color: #6b5a2d !important;
+  color: $paper !important;
+}
+
 hr {
   border-color: $rule;
   opacity: 1;

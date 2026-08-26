@@ -31,11 +31,13 @@
 
   <table class="table latest-transactions">
     <thead>
-      <th class="table-cell-txid" i18n="dashboard.latest-transactions.txid">TXID</th>
-      <th class="table-cell-fiat" *ngIf="(network$ | async) === ''">{{ currency }}</th>
-      <th class="table-cell-satoshis" i18n="dashboard.latest-transactions.amount">Amount</th>
-      <th class="table-cell-vsize" *ngIf="!widget" i18n="transaction.vsize|Transaction Virtual Size">vSize</th>
-      <th class="table-cell-fees" i18n="transaction.fee|Transaction fee">Fee</th>
+      <tr>
+        <th scope="col" class="table-cell-txid" i18n="dashboard.latest-transactions.txid">TXID</th>
+        <th scope="col" class="table-cell-fiat" *ngIf="(network$ | async) === ''">{{ currency }}</th>
+        <th scope="col" class="table-cell-satoshis" i18n="dashboard.latest-transactions.amount">Amount</th>
+        <th scope="col" class="table-cell-vsize" *ngIf="!widget" i18n="transaction.vsize|Transaction Virtual Size">vSize</th>
+        <th scope="col" class="table-cell-fees" i18n="transaction.fee|Transaction fee">Fee</th>
+      </tr>
     </thead>
     <tbody data-cy="transactions-list" *ngIf="transactions$ | async as transactions; else skeleton">
       <tr *ngFor="let transaction of transactions; trackBy: trackByTxid">
