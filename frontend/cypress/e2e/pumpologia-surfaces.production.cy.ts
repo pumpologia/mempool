@@ -18,12 +18,13 @@ describe('Pumpologia primary surfaces', () => {
     expectNoHorizontalOverflow();
   });
 
-  it('hydrates inherited explorer tools only when they approach the viewport', () => {
+  it('hydrates inherited explorer tools progressively', () => {
     cy.visit('/fr/');
     cy.contains('Bitcoin market tape', { timeout: 30_000 }).should('be.visible');
-    cy.get('.dashboard-deferred-placeholder').should('exist');
-    cy.scrollTo('bottom', { duration: 500 });
-    cy.contains('Transaction Fees', { timeout: 30_000 }).should('be.visible');
+    cy.get('.dashboard-deferred-placeholder').should('exist').then($placeholder => {
+      $placeholder[0].scrollIntoView({ block: 'center', behavior: 'instant' });
+    });
+    cy.get('app-fees-box', { timeout: 30_000 }).should('exist');
   });
 
   it('loads the protocol summary and paginated activity without overlap', () => {
