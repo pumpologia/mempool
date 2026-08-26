@@ -8,10 +8,6 @@
     </div>
   </header>
 
-  <div *ngIf="apiError" class="protocol-alert" role="alert">
-    Trading data is temporarily unavailable. No technical service details are exposed.
-  </div>
-
   <ng-container *ngIf="pageKind === 'overview'; else positionView">
     <ng-container *ngIf="summary$ | async as summary; else loadingSummary">
       <section class="terminal-metrics" aria-label="Pumpologia market summary">
@@ -48,6 +44,10 @@
         <span class="count-label" title="Newest events first" aria-label="Newest events first"><fa-icon [icon]="['fas', 'clock']" [fixedWidth]="true"></fa-icon></span>
       </div>
       <ng-container *ngIf="activity$ | async as activity; else loadingTable">
+        <div *ngIf="activityError" class="protocol-alert protocol-alert-action" role="alert">
+          <span>Recent activity is temporarily unavailable. No technical service details are exposed.</span>
+          <button type="button" class="btn btn-sm btn-secondary" (click)="retryActivity()">Retry</button>
+        </div>
         <div class="activity-grid">
           <article *ngFor="let operation of activity.items" class="activity-card" [ngClass]="'event-' + operationEventKind(operation)">
             <div class="activity-top">
@@ -80,9 +80,9 @@
               </a>
             </div>
           </article>
-          <div *ngIf="!activity.items.length" class="activity-empty">No Pumpologia event on this page.</div>
+          <div *ngIf="!activity.items.length && !activityError" class="activity-empty">No Pumpologia event on this page.</div>
         </div>
-        <div class="table-pagination">
+        <div *ngIf="!activityError" class="table-pagination">
           <span *ngIf="activity.items.length">Events {{ activityOffset + 1 }}–{{ activityOffset + activity.items.length }}</span>
           <span *ngIf="!activity.items.length">0 events</span>
           <div class="icon-pagination" aria-label="Activity pages">
@@ -157,13 +157,42 @@
 </ng-template>
 
 <ng-template #detailUnavailable>
-  <div class="protocol-alert">This position could not be loaded or does not exist.</div>
+  <div *ngIf="positionLoading; else positionUnavailable" class="position-loading" role="status" aria-live="polite">
+    <span class="skeleton-loader"></span>
+    <span class="skeleton-loader"></span>
+    <span class="skeleton-loader"></span>
+  </div>
 </ng-template>
 
 <ng-template #loadingSummary>
-  <div class="loading-panel" role="status">Loading Pumpologia market state…</div>
+  <div *ngIf="summaryError; else summarySkeleton" class="protocol-alert" role="alert">
+    Market totals are temporarily unavailable. The activity tape remains independently accessible and the summary will retry automatically.
+  </div>
 </ng-template>
 
 <ng-template #loadingTable>
-  <div class="loading-panel" role="status" aria-live="polite"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Loading this trading page…</div>
+  <div class="activity-grid activity-loading-grid" role="status" aria-live="polite" aria-label="Loading this trading page">
+    <article *ngFor="let placeholder of [1, 2, 3]" class="activity-card activity-skeleton" aria-hidden="true">
+      <span class="skeleton-loader"></span>
+      <span class="skeleton-loader"></span>
+      <span class="skeleton-loader"></span>
+      <span class="skeleton-loader"></span>
+    </article>
+  </div>
+</ng-template>
+
+<ng-template #summarySkeleton>
+  <section class="terminal-metrics metrics-skeleton" role="status" aria-live="polite" aria-label="Loading Pumpologia market state">
+    <article *ngFor="let placeholder of [1, 2, 3, 4]" aria-hidden="true">
+      <span class="skeleton-loader"></span>
+      <span class="skeleton-loader"></span>
+      <span class="skeleton-loader"></span>
+    </article>
+  </section>
+</ng-template>
+
+<ng-template #positionUnavailable>
+  <div class="protocol-alert" role="alert">
+    {{ positionError ? 'This position is temporarily unavailable.' : 'This position does not exist.' }} No technical service details are exposed.
+  </div>
 </ng-template>

@@ -1,4 +1,4 @@
-<section *ngIf="operations.length || (!txid && blockHeight != null)" class="pumpologia-context" [class.is-loading]="isLoading" aria-labelledby="pumpologia-context-title" [attr.aria-busy]="isLoading">
+<section *ngIf="isLoading || hasError || operations.length || (!txid && blockHeight != null)" class="pumpologia-context" [class.is-loading]="isLoading" aria-labelledby="pumpologia-context-title" [attr.aria-busy]="isLoading">
   <div class="context-heading">
     <div>
       <span class="context-kicker">Pumpologia protocol events</span>
@@ -13,7 +13,16 @@
     <span class="skeleton-loader"></span>
   </div>
 
-  <div *ngIf="!isLoading && !operations.length && !txid" class="context-empty">
+  <div *ngIf="!isLoading && hasError" class="context-error" role="alert">
+    <fa-icon [icon]="['fas', 'exclamation-circle']" [fixedWidth]="true"></fa-icon>
+    <div>
+      <strong>Protocol events are temporarily unavailable</strong>
+      <span>The native explorer remains usable. No upstream service details are exposed.</span>
+    </div>
+    <button type="button" class="btn btn-sm btn-secondary" (click)="retry()">Retry</button>
+  </div>
+
+  <div *ngIf="!isLoading && !hasError && !operations.length && !txid" class="context-empty">
     <fa-icon [icon]="['fas', 'check']" [fixedWidth]="true"></fa-icon>
     <div>
       <strong>No Pumpologia events in this block</strong>

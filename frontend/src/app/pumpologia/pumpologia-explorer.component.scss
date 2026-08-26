@@ -59,6 +59,22 @@ h2 { font-size: clamp(1.7rem, 3vw, 2.6rem); line-height: .95; margin: .4rem 0 0;
 
 .protocol-alert, .loading-panel { background: #151515; border: 1px solid var(--border-subtle); border-radius: 0; color: var(--fg); font-size: .9rem; margin-top: 1rem; padding: 1rem 1.2rem; }
 .loading-panel { align-items: center; display: flex; font-size: .94rem; gap: .65rem; min-height: 4.5rem; }
+.protocol-alert-action { align-items: center; display: flex; gap: 1rem; justify-content: space-between; margin-bottom: .8rem; }
+.protocol-alert-action .btn { flex: 0 0 auto; min-height: 2.25rem; }
+
+.metrics-skeleton article { gap: .75rem; min-height: 7.45rem; }
+.metrics-skeleton .skeleton-loader,
+.activity-skeleton .skeleton-loader,
+.position-loading .skeleton-loader { margin: 0; max-width: none; }
+.metrics-skeleton .skeleton-loader:nth-child(1) { width: 42%; }
+.metrics-skeleton .skeleton-loader:nth-child(2) { height: 1.75rem; width: 72%; }
+.metrics-skeleton .skeleton-loader:nth-child(3) { width: 55%; }
+.activity-loading-grid { margin-top: 0; }
+.activity-skeleton { gap: .8rem; min-height: 17rem; }
+.activity-skeleton .skeleton-loader:nth-child(1) { height: 2.15rem; width: 45%; }
+.activity-skeleton .skeleton-loader:nth-child(2) { height: 3rem; }
+.activity-skeleton .skeleton-loader:nth-child(n+3) { width: 82%; }
+.position-loading { border: 1px solid var(--border-subtle); display: grid; gap: .8rem; margin-top: 1rem; min-height: 12rem; padding: 1.25rem; }
 
 .terminal-metrics, .position-metrics { border-left: 1px solid var(--border-subtle); border-top: 1px solid var(--border-subtle); display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); margin-top: 1rem; }
 .terminal-metrics article, .position-metrics article { background: #111; border-bottom: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); border-radius: 0; display: flex; flex-direction: column; min-width: 0; padding: 1.2rem; }
@@ -199,6 +215,9 @@ h2 { font-size: clamp(1.7rem, 3vw, 2.6rem); line-height: .95; margin: .4rem 0 0;
   .market-tape { min-width: 0; }
   .methodology, .proof-panel { gap: 1.25rem; grid-template-columns: 1fr; }
   .price-levels { grid-template-columns: 1fr; }
+  .protocol-alert-action { align-items: stretch; flex-direction: column; }
+  .protocol-alert-action .btn { min-height: 2.75rem; }
+  .table-pagination .btn, .icon-pagination .btn { height: 2.75rem; width: 2.75rem; }
 }
 
 @media (max-width: 575.98px) {

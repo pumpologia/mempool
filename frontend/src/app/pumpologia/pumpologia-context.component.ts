@@ -9,7 +9,7 @@ import {
   PumpologiaOperation,
 } from '@app/services/pumpologia-api.service';
 import { Subject, of } from 'rxjs';
-import { catchError, takeUntil } from 'rxjs/operators';
+import { catchError, takeUntil, tap } from 'rxjs/operators';
 import {
   pumpologiaEventIcon,
   pumpologiaEventKind,
@@ -37,6 +37,7 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
   operationOffset = 0;
   hasMore = false;
   isLoading = false;
+  hasError = false;
   private readonly requestChanged$ = new Subject<void>();
   private readonly destroy$ = new Subject<void>();
 
@@ -51,18 +52,10 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
     this.operationOffset = 0;
     this.hasMore = false;
     this.isLoading = true;
+    this.hasError = false;
 
     if (this.txid && /^[a-f0-9]{64}$/i.test(this.txid)) {
-      this.pumpologiaApi.getOperation$(this.txid).pipe(
-        catchError(() => of(null)),
-        takeUntil(this.requestChanged$),
-        takeUntil(this.destroy$),
-      ).subscribe(operation => {
-        this.operations = Array.isArray(operation?.items) ? operation.items : [];
-        this.isLoading = false;
-        this.matchChange.emit(this.operations.length > 0);
-        this.cd.markForCheck();
-      });
+      this.loadTransactionOperation();
       return;
     }
 
@@ -78,7 +71,36 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
     this.operationOffset = Math.max(0, this.operationOffset + (delta * this.pageSize));
     this.requestChanged$.next();
     this.isLoading = true;
+    this.hasError = false;
     this.loadBlockOperations();
+  }
+
+  retry(): void {
+    this.requestChanged$.next();
+    this.isLoading = true;
+    this.hasError = false;
+    if (this.txid && /^[a-f0-9]{64}$/i.test(this.txid)) {
+      this.loadTransactionOperation();
+    } else if (Number.isSafeInteger(this.blockHeight) && (this.blockHeight as number) >= 0) {
+      this.loadBlockOperations();
+    }
+  }
+
+  private loadTransactionOperation(): void {
+    this.pumpologiaApi.getOperation$(this.txid as string).pipe(
+      tap(() => { this.hasError = false; }),
+      catchError(() => {
+        this.hasError = true;
+        return of(null);
+      }),
+      takeUntil(this.requestChanged$),
+      takeUntil(this.destroy$),
+    ).subscribe(operation => {
+      this.operations = Array.isArray(operation?.items) ? operation.items : [];
+      this.isLoading = false;
+      this.matchChange.emit(this.operations.length > 0);
+      this.cd.markForCheck();
+    });
   }
 
   private loadBlockOperations(): void {
@@ -86,7 +108,11 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
       block_height: this.blockHeight as number,
       offset: this.operationOffset,
     }).pipe(
-      catchError(() => of({ items: [], has_more: false })),
+      tap(() => { this.hasError = false; }),
+      catchError(() => {
+        this.hasError = true;
+        return of({ items: [], has_more: false });
+      }),
       takeUntil(this.requestChanged$),
       takeUntil(this.destroy$),
     ).subscribe(response => {
@@ -110,14 +136,18 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
   }
 
   formatUsd(value?: string | number | null): string {
-    if (value === null || value === undefined || value === '') return '—';
+    if (value === null || value === undefined || value === '') {
+      return '—';
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2,
     }).format(Number(value));
   }
 
   formatSatsAsUsd(value: string | number | null | undefined, price: number | null): string {
-    if (price === null || !Number.isFinite(price)) return '—';
+    if (price === null || !Number.isFinite(price)) {
+      return '—';
+    }
     return this.formatUsd((Number(value || 0) / 100_000_000) * price);
   }
 
@@ -131,7 +161,9 @@ export class PumpologiaContextComponent implements OnChanges, OnDestroy {
   }
 
   formatReturn(value?: number | null): string {
-    if (value === null || value === undefined) return '—';
+    if (value === null || value === undefined) {
+      return '—';
+    }
     return `${(value / 100).toFixed(2)}%`;
   }
 
