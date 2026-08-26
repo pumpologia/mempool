@@ -52,4 +52,15 @@ describe('Pumpologia primary surfaces', () => {
     cy.contains('Protocol events are temporarily unavailable', { timeout: 30_000 }).should('be.visible');
     cy.contains('No Pumpologia events in this block').should('not.exist');
   });
+
+  it('keeps the block carousel stable when market overlays are unavailable', () => {
+    cy.intercept('GET', '**/api/pumpologia/v1/block-market?*', {
+      statusCode: 502,
+      body: {},
+    });
+    cy.visit('/fr/');
+    cy.contains('Bitcoin market tape', { timeout: 30_000 }).should('be.visible');
+    cy.get('a.blockLink[aria-label]').should('have.length.at.least', 1);
+    expectNoHorizontalOverflow();
+  });
 });

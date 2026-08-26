@@ -65,6 +65,7 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
   timeLtr: boolean;
   pumpologiaMarketByHeight: Record<number, PumpologiaBlockMarketPoint> = {};
   pumpologiaMarketRefresh: ReturnType<typeof setInterval>;
+  pumpologiaMarketRetryAt = 0;
 
   blockOffset: number = 155;
   dividerBlockOffset: number = 205;
@@ -352,14 +353,18 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   formatPumpologiaUsd(value: number | null | undefined): string {
-    if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+    if (value === null || value === undefined || !Number.isFinite(value)) {
+      return '—';
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency', currency: 'USD', maximumFractionDigits: 0,
     }).format(value);
   }
 
   formatPumpologiaChange(value: number | null | undefined): string {
-    if (value === null || value === undefined || !Number.isFinite(value)) return 'Δ —';
+    if (value === null || value === undefined || !Number.isFinite(value)) {
+      return 'Δ —';
+    }
     const formatted = new Intl.NumberFormat('en-US', {
       style: 'currency', currency: 'USD', maximumFractionDigits: 0,
       signDisplay: 'always',
@@ -368,7 +373,9 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   formatPumpologiaOpenInterest(point: PumpologiaBlockMarketPoint | null): string {
-    if (!point?.price_usd) return 'OI —';
+    if (!point?.price_usd) {
+      return 'OI —';
+    }
     const usd = (Number(point.open_interest_sats || 0) / 100_000_000) * point.price_usd;
     const formatted = new Intl.NumberFormat('en-US', {
       style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 2,
@@ -377,20 +384,28 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private loadPumpologiaMarket(): void {
-    if (!this.stateService.isMainnet()) return;
+    if (!this.stateService.isMainnet() || Date.now() < this.pumpologiaMarketRetryAt) {
+      return;
+    }
     const heights = Array.from(new Set(this.blocks
       .map(block => block?.height)
       .filter((height): height is number => Number.isInteger(height) && height > 0)))
       .slice(0, 16);
-    if (!heights.length) return;
+    if (!heights.length) {
+      return;
+    }
     this.pumpologiaMarketSubscription?.unsubscribe();
     this.pumpologiaMarketSubscription = this.pumpologiaApi.getBlockMarket$(heights).subscribe({
       next: response => {
+        this.pumpologiaMarketRetryAt = 0;
         this.pumpologiaMarketByHeight = response.blocks.reduce<Record<number, PumpologiaBlockMarketPoint>>((items, point) => {
           items[point.height] = point;
           return items;
         }, {});
         this.cd.markForCheck();
+      },
+      error: () => {
+        this.pumpologiaMarketRetryAt = Date.now() + 60_000;
       },
     });
   }

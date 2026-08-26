@@ -96,6 +96,7 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
   projectedMarket: PumpologiaBlockMarketPoint | null = null;
   pumpologiaMarketSubscription: Subscription;
   pumpologiaMarketRefresh: ReturnType<typeof setInterval>;
+  pumpologiaMarketRetryAt = 0;
 
   constructor(
     private router: Router,
@@ -338,7 +339,9 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   formatPumpologiaUsd(value: number | null | undefined): string {
-    if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+    if (value === null || value === undefined || !Number.isFinite(value)) {
+      return '—';
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency', currency: 'USD', maximumFractionDigits: 0,
     }).format(value);
@@ -349,7 +352,9 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   formatPumpologiaChange(value: number | null | undefined): string {
-    if (value === null || value === undefined || !Number.isFinite(value)) return 'Δ —';
+    if (value === null || value === undefined || !Number.isFinite(value)) {
+      return 'Δ —';
+    }
     const formatted = new Intl.NumberFormat('en-US', {
       style: 'currency', currency: 'USD', maximumFractionDigits: 0,
       signDisplay: 'always',
@@ -358,7 +363,9 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   formatPumpologiaOpenInterest(): string {
-    if (!this.projectedMarket?.price_usd) return 'OI —';
+    if (!this.projectedMarket?.price_usd) {
+      return 'OI —';
+    }
     const usd = (Number(this.projectedMarket.open_interest_sats || 0) / 100_000_000) * this.projectedMarket.price_usd;
     const formatted = new Intl.NumberFormat('en-US', {
       style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 2,
@@ -367,12 +374,18 @@ export class MempoolBlocksComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private loadPumpologiaMarket(): void {
-    if (!this.stateService.isMainnet() || this.chainTip < 1) return;
+    if (!this.stateService.isMainnet() || this.chainTip < 1 || Date.now() < this.pumpologiaMarketRetryAt) {
+      return;
+    }
     this.pumpologiaMarketSubscription?.unsubscribe();
     this.pumpologiaMarketSubscription = this.pumpologiaApi.getBlockMarket$([this.chainTip]).subscribe({
       next: response => {
+        this.pumpologiaMarketRetryAt = 0;
         this.projectedMarket = response.blocks[0] || null;
         this.cd.markForCheck();
+      },
+      error: () => {
+        this.pumpologiaMarketRetryAt = Date.now() + 60_000;
       },
     });
   }
