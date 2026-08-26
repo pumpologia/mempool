@@ -8,10 +8,11 @@ const POSITION_REGEX = /^[a-f0-9]{64}:\d+$/i;
 const TICK_REGEX = /^[a-z0-9]{1,32}$/i;
 const STATE_REGEX = /^[a-z_]{1,32}$/i;
 const DIRECTION_REGEX = /^(long|short)$/i;
-const INDEXER_TIMEOUT_MS = 5000;
-const PUMPOLOGIA_BACKEND_TIMEOUT_MS = 5000;
+const INDEXER_TIMEOUT_MS = 15_000;
+const PUMPOLOGIA_BACKEND_TIMEOUT_MS = 15_000;
 const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
-const CACHE_TTL_MS = 10_000;
+const CACHE_TTL_MS = 30_000;
+const CACHE_STALE_TTL_MS = 5 * 60_000;
 const CHART_TIMEFRAME_REGEX = /^(1h|4h|1d|1w)$/;
 const BLOCK_HEIGHTS_REGEX = /^\d+(,\d+){0,15}$/;
 
@@ -19,6 +20,7 @@ type IndexerRecord = Record<string, unknown>;
 
 interface CacheEntry {
   expiresAt: number;
+  staleUntil: number;
   value: unknown;
 }
 
@@ -47,6 +49,7 @@ interface SyncRecord extends IndexerRecord {
 class PumpologiaRoutes {
   private readonly tag = 'Pumpologia';
   private readonly cache = new Map<string, CacheEntry>();
+  private readonly inFlight = new Map<string, Promise<unknown>>();
   private readonly enabled = process.env.PUMPOLOGIA_INDEXER_ENABLED === 'true';
   private readonly indexerUrl = (process.env.PUMPOLOGIA_INDEXER_URL || 'http://127.0.0.1:8088').replace(/\/$/, '');
   private readonly backendUrl = (process.env.PUMPOLOGIA_BACKEND_URL || 'http://127.0.0.1:4301').replace(/\/$/, '');
@@ -191,6 +194,12 @@ class PumpologiaRoutes {
       this.setCached('public-summary', data);
       this.sendJson(res, data, 10);
     } catch (error) {
+      const stale = this.canServeStale(error) ? this.getCached('public-summary', true) : undefined;
+      if (stale !== undefined) {
+        logger.warn('Serving the last valid Pumpologia summary after a transient upstream failure', this.tag);
+        this.sendJson(res, stale, 10);
+        return;
+      }
       this.sendUpstreamError(res, error, 'summary');
     }
   }
@@ -605,15 +614,35 @@ class PumpologiaRoutes {
     const cacheKey = `${path}?${new URLSearchParams(Object.entries(params).map(([key, value]) => [key, String(value)])).toString()}`;
     const cached = this.getCached(cacheKey);
     if (cached !== undefined) return cached;
-    const response = await axios.get(`${this.indexerUrl}/${path}`, {
+    const pending = this.inFlight.get(cacheKey);
+    if (pending) return pending;
+
+    const request = axios.get(`${this.indexerUrl}/${path}`, {
       params,
       timeout: INDEXER_TIMEOUT_MS,
       maxContentLength: MAX_RESPONSE_BYTES,
       maxBodyLength: MAX_RESPONSE_BYTES,
       headers: { Accept: 'application/json' },
-    });
-    this.setCached(cacheKey, response.data);
-    return response.data;
+    })
+      .then(response => {
+        this.setCached(cacheKey, response.data);
+        return response.data;
+      })
+      .catch(error => {
+        const stale = this.canServeStale(error) ? this.getCached(cacheKey, true) : undefined;
+        if (stale !== undefined) {
+          logger.warn(`Serving cached Pumpologia indexer data for ${path} after a transient upstream failure`, this.tag);
+          return stale;
+        }
+        throw error;
+      });
+    this.inFlight.set(cacheKey, request);
+
+    try {
+      return await request;
+    } finally {
+      if (this.inFlight.get(cacheKey) === request) this.inFlight.delete(cacheKey);
+    }
   }
 
   /** @asyncUnsafe */
@@ -621,15 +650,35 @@ class PumpologiaRoutes {
     const cacheKey = `backend:${path}?${new URLSearchParams(Object.entries(params).map(([key, value]) => [key, String(value)])).toString()}`;
     const cached = this.getCached(cacheKey);
     if (cached !== undefined) return cached;
-    const response = await axios.get(`${this.backendUrl}/${path}`, {
+    const pending = this.inFlight.get(cacheKey);
+    if (pending) return pending;
+
+    const request = axios.get(`${this.backendUrl}/${path}`, {
       params,
       timeout: PUMPOLOGIA_BACKEND_TIMEOUT_MS,
       maxContentLength: MAX_RESPONSE_BYTES,
       maxBodyLength: MAX_RESPONSE_BYTES,
       headers: { Accept: 'application/json' },
-    });
-    this.setCached(cacheKey, response.data);
-    return response.data;
+    })
+      .then(response => {
+        this.setCached(cacheKey, response.data);
+        return response.data;
+      })
+      .catch(error => {
+        const stale = this.canServeStale(error) ? this.getCached(cacheKey, true) : undefined;
+        if (stale !== undefined) {
+          logger.warn(`Serving cached Pumpologia backend data for ${path} after a transient upstream failure`, this.tag);
+          return stale;
+        }
+        throw error;
+      });
+    this.inFlight.set(cacheKey, request);
+
+    try {
+      return await request;
+    } finally {
+      if (this.inFlight.get(cacheKey) === request) this.inFlight.delete(cacheKey);
+    }
   }
 
   private sendJson(res: Response, data: unknown, maxAgeSeconds: number): void {
@@ -699,22 +748,32 @@ class PumpologiaRoutes {
     return `${negative && rounded !== 0n ? '-' : ''}${whole}.${fraction}`;
   }
 
-  private getCached(key: string): unknown | undefined {
+  private canServeStale(error: unknown): boolean {
+    return isAxiosError(error) && (!error.response || error.response.status >= 500);
+  }
+
+  private getCached(key: string, allowStale = false): unknown | undefined {
     const entry = this.cache.get(key);
     if (!entry) return undefined;
-    if (entry.expiresAt <= Date.now()) {
+    const now = Date.now();
+    if (entry.expiresAt > now || (allowStale && entry.staleUntil > now)) return entry.value;
+    if (entry.staleUntil <= now) {
       this.cache.delete(key);
-      return undefined;
     }
-    return entry.value;
+    return undefined;
   }
 
   private setCached(key: string, value: unknown): void {
-    if (this.cache.size >= 128) {
+    if (!this.cache.has(key) && this.cache.size >= 128) {
       const oldestKey = this.cache.keys().next().value;
       if (oldestKey) this.cache.delete(oldestKey);
     }
-    this.cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
+    const now = Date.now();
+    this.cache.set(key, {
+      value,
+      expiresAt: now + CACHE_TTL_MS,
+      staleUntil: now + CACHE_STALE_TTL_MS,
+    });
   }
 
   private optionalString(value: unknown, regex: RegExp): string | undefined | null {
