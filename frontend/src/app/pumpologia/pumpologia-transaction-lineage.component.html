@@ -1,0 +1,88 @@
+<section *ngIf="transaction && primaryOperation" class="lineage-shell" [ngClass]="'event-' + eventKind()" aria-labelledby="lineage-title">
+  <header class="lineage-header">
+    <div>
+      <span class="lineage-kicker">Verifiable position path</span>
+      <h3 id="lineage-title">Transaction lineage</h3>
+    </div>
+    <div class="lineage-legend" aria-label="Graph legend">
+      <span class="legend-input">Input</span>
+      <span class="legend-position">Position</span>
+      <span class="legend-output">Output</span>
+    </div>
+  </header>
+
+  <div *ngIf="isLoading" class="lineage-loading" aria-label="Loading position lineage">
+    <span class="skeleton-loader"></span>
+    <span class="skeleton-loader"></span>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
+    <nav *ngIf="primaryPosition as position" class="position-route" aria-label="Position lifecycle">
+      <a [routerLink]="['/tx', position.txid]" class="lifecycle-node open-node" [class.current]="isCurrentTx(position.txid)">
+        <span>Open · block {{ position.open_height | number }}</span>
+        <strong>{{ shortHash(position.txid) }}</strong>
+        <small>{{ position.side }} {{ position.market }} / USD</small>
+      </a>
+
+      <div class="lifecycle-link" aria-hidden="true">
+        <span>{{ position.position_id }}</span>
+        <i></i>
+      </div>
+
+      <a *ngIf="position.close_txid; else indexedTerminal" [routerLink]="['/tx', position.close_txid]" class="lifecycle-node close-node" [class.current]="isCurrentTx(position.close_txid)">
+        <span>{{ position.close_reason || 'Close' }} · block {{ position.close_height | number }}</span>
+        <strong>{{ shortHash(position.close_txid) }}</strong>
+        <small [ngClass]="pnlClass(position.pnl_usd)">{{ formatUsd(position.pnl_usd) }} P&amp;L</small>
+      </a>
+      <ng-template #indexedTerminal>
+        <div class="lifecycle-node close-node terminal-node" [class.current]="position.status !== 'OPEN'">
+          <span>{{ position.status === 'OPEN' ? 'Live position' : (position.close_reason || position.status) }}</span>
+          <strong>{{ position.status === 'OPEN' ? 'Awaiting settlement' : 'Indexer settlement' }}</strong>
+          <small [ngClass]="pnlClass(position.pnl_usd)">{{ formatUsd(position.pnl_usd) }} P&amp;L</small>
+        </div>
+      </ng-template>
+    </nav>
+
+    <div class="lineage-canvas" [style.height.px]="canvasHeight">
+      <svg class="branch-lines" [attr.viewBox]="'0 0 1200 ' + canvasHeight" preserveAspectRatio="none" aria-hidden="true">
+        <path *ngFor="let input of visibleInputs; let index = index" [attr.d]="inputPath(index)" class="input-path" [class.protocol-path]="isPositionInput(input)"></path>
+        <path *ngFor="let output of visibleOutputs; let index = index" [attr.d]="outputPath(index)" class="output-path" [class.protocol-path]="isPositionOutput(index) || output.scriptpubkey_type === 'op_return'"></path>
+      </svg>
+
+      <a *ngFor="let input of visibleInputs; let index = index" class="branch-node input-node" [class.protocol-node]="isPositionInput(input)" [style.top.px]="branchY(index, visibleInputs.length) - 29" [routerLink]="['/tx', input.txid]" [attr.aria-label]="inputRole(input) + ' ' + (index + 1)">
+        <span>IN {{ index + 1 | number:'2.0-0' }} · {{ inputRole(input) }}</span>
+        <strong>{{ shortHash(input.txid) }}:{{ input.vout }}</strong>
+        <small>{{ formatBtc(input.prevout?.value) }}</small>
+      </a>
+
+      <article class="operation-node" [style.top.px]="centerY - 84">
+        <span class="operation-icon" [attr.aria-label]="eventLabel()" [title]="eventLabel()">
+          <fa-icon [icon]="['fas', eventIcon()]" [fixedWidth]="true"></fa-icon>
+        </span>
+        <div class="operation-copy">
+          <span>{{ eventLabel() }}</span>
+          <strong>{{ primaryOperation.market || 'Pumpologia' }} <i>/ USD</i></strong>
+        </div>
+        <div class="operation-pnl" [ngClass]="pnlClass(primaryOperation.pnl_usd)">
+          <span>{{ primaryOperation.pnl_kind === 'realized' ? 'Realized P&L' : 'Live P&L' }}</span>
+          <strong>{{ formatUsd(primaryOperation.pnl_usd) }}</strong>
+        </div>
+        <small>{{ transaction.txid | slice:0:10 }}…{{ transaction.txid | slice:-8 }}</small>
+      </article>
+
+      <a *ngFor="let output of visibleOutputs; let index = index" class="branch-node output-node" [class.protocol-node]="isPositionOutput(index) || output.scriptpubkey_type === 'op_return'" [class.spent-node]="outspends[index]?.spent" [style.top.px]="branchY(index, visibleOutputs.length) - 29" [routerLink]="outputLink(index)" [attr.aria-label]="outputRole(output, index) + ' ' + (index + 1)">
+        <span>OUT {{ index + 1 | number:'2.0-0' }} · {{ outputRole(output, index) }}</span>
+        <strong>{{ outspends[index]?.spent ? shortHash(outspends[index].txid) : (output.scriptpubkey_type | uppercase) }}</strong>
+        <small>{{ output.scriptpubkey_type === 'op_return' ? 'Decoded by Pumpologia' : formatBtc(output.value) }}</small>
+      </a>
+
+      <span *ngIf="transaction.vin.length > maxBranches" class="branch-overflow input-overflow">+{{ transaction.vin.length - maxBranches }} inputs</span>
+      <span *ngIf="transaction.vout.length > maxBranches" class="branch-overflow output-overflow">+{{ transaction.vout.length - maxBranches }} outputs</span>
+    </div>
+
+    <footer class="lineage-footnote">
+      <span>The coloured path identifies protocol-bearing UTXOs. Every linked node opens its verifiable transaction.</span>
+      <strong>{{ transaction.vin.length }} inputs · {{ transaction.vout.length }} outputs</strong>
+    </footer>
+  </ng-container>
+</section>

@@ -305,7 +305,7 @@ class PumpologiaRoutes {
         this.getIndexer('sync'),
       ]);
       const markPrice = await this.getMarkPrice(this.asRecord(syncRaw) as SyncRecord);
-      this.sendJson(res, this.sanitizePosition(this.asRecord(raw) as PositionRecord, markPrice), 10);
+      this.sendJson(res, this.sanitizePosition(this.asRecord(raw) as PositionRecord, markPrice, true), 10);
     } catch (error) {
       this.sendUpstreamError(res, error, 'position');
     }
@@ -429,7 +429,11 @@ class PumpologiaRoutes {
     }
   }
 
-  private sanitizePosition(position: PositionRecord, indexedMarkPrice: number | null): IndexerRecord {
+  private sanitizePosition(
+    position: PositionRecord,
+    indexedMarkPrice: number | null,
+    includeLineage = false,
+  ): IndexerRecord {
     const state = this.text(position.state, 'UNKNOWN').toUpperCase();
     const direction = this.text(position.direction).toLowerCase();
     const leverage = this.number(position.leverage);
@@ -464,7 +468,7 @@ class PumpologiaRoutes {
     }
 
     const positionId = this.text(position.position_id || position.current_position_id);
-    return {
+    const sanitized: IndexerRecord = {
       position_id: positionId,
       txid: positionId.split(':')[0] || null,
       market: this.text(position.tick_canonical).toUpperCase(),
@@ -489,6 +493,28 @@ class PumpologiaRoutes {
       outcome: this.nullableText(position.outcome)?.toUpperCase() || null,
       close_reason: this.humanize(this.nullableText(position.terminal_reason)),
     };
+
+    if (includeLineage) {
+      const closeTxid = this.nullableText(position.close_txid);
+      sanitized.close_txid = closeTxid && HASH_REGEX.test(closeTxid) ? closeTxid.toLowerCase() : null;
+      sanitized.close_input_index = this.nullableNumber(position.close_input_index);
+      sanitized.open_vout = Number(positionId.split(':')[1] || 0);
+      sanitized.versions = (Array.isArray(position.versions) ? position.versions : []).map(rawVersion => {
+        const version = this.asRecord(rawVersion);
+        const consumedTxid = this.nullableText(version.consumed_txid);
+        return {
+          position_id: this.text(version.position_version_id),
+          parent_position_id: this.nullableText(version.parent_position_id),
+          version: this.number(version.version),
+          created_height: this.number(version.created_height),
+          state: this.text(version.state, 'UNKNOWN').toUpperCase(),
+          consumed_height: this.nullableNumber(version.consumed_height),
+          consumed_txid: consumedTxid && HASH_REGEX.test(consumedTxid) ? consumedTxid.toLowerCase() : null,
+        };
+      });
+    }
+
+    return sanitized;
   }
 
   private async sanitizeOperations(items: OperationRecord[], markPrice: number | null): Promise<IndexerRecord[]> {

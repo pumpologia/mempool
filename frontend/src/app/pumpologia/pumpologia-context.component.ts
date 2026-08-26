@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, In
 import { RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { IconName } from '@fortawesome/fontawesome-common-types';
+import { Transaction } from '@interfaces/electrs.interface';
 import {
   PumpologiaApiService,
   PumpologiaOperation,
@@ -15,17 +16,19 @@ import {
   pumpologiaEventLabel,
   pumpologiaPnlLabel,
 } from './pumpologia-event.utils';
+import { PumpologiaTransactionLineageComponent } from './pumpologia-transaction-lineage.component';
 
 @Component({
   selector: 'app-pumpologia-context',
   standalone: true,
-  imports: [CommonModule, RouterModule, FontAwesomeModule],
+  imports: [CommonModule, RouterModule, FontAwesomeModule, PumpologiaTransactionLineageComponent],
   templateUrl: './pumpologia-context.component.html',
   styleUrls: ['./pumpologia-context.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PumpologiaContextComponent implements OnChanges, OnDestroy {
   @Input() txid?: string;
+  @Input() transaction?: Transaction | null;
   @Input() blockHeight?: number;
   @Output() matchChange = new EventEmitter<boolean>();
 

@@ -21,6 +21,12 @@
     </div>
   </div>
 
+  <app-pumpologia-transaction-lineage
+    *ngIf="txid && transaction && operations.length"
+    [transaction]="transaction"
+    [operations]="operations">
+  </app-pumpologia-transaction-lineage>
+
   <div *ngIf="operations.length" class="context-operations">
     <article *ngFor="let operation of operations" [ngClass]="'event-' + operationEventKind(operation)">
       <div class="trade-head">

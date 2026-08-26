@@ -31,6 +31,20 @@ export interface PumpologiaPosition {
   return_bps: number | null;
   outcome: string | null;
   close_reason: string | null;
+  close_txid?: string | null;
+  close_input_index?: number | null;
+  open_vout?: number;
+  versions?: PumpologiaPositionVersion[];
+}
+
+export interface PumpologiaPositionVersion {
+  position_id: string;
+  parent_position_id: string | null;
+  version: number;
+  created_height: number;
+  state: string;
+  consumed_height: number | null;
+  consumed_txid: string | null;
 }
 
 export interface PumpologiaOperation {

@@ -31,7 +31,7 @@
   </div>
   <div class="clearfix"></div>
 
-  <app-pumpologia-context *ngIf="network === ''" [txid]="txId"></app-pumpologia-context>
+  <app-pumpologia-context *ngIf="network === ''" [txid]="txId" [transaction]="tx"></app-pumpologia-context>
 
   @if (duplicateTxBlocks) {
     <div class="box duplicate-tx-alert">
