@@ -38,6 +38,8 @@ describe('Pumpologia primary surfaces', () => {
 
   it('shows only the bounded Pumpologia tape on an event block', () => {
     cy.visit(`/fr/block/${EVENT_BLOCK}`);
+    cy.get('#blockchain-container', { timeout: 30_000 }).should('be.visible');
+    cy.get('#blockchain-container a.blockLink').should('have.length.at.least', 1);
     cy.contains('Activity indexed in this block', { timeout: 30_000 }).should('be.visible');
     cy.get('.context-operations article', { timeout: 30_000 }).should('have.length.at.least', 1).and('have.length.at.most', 6);
     cy.contains(/transactions$/i).should('not.exist');

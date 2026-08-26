@@ -61,11 +61,6 @@ export class StartComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   hasMenu = false;
 
-  get pumpologiaBlockPage(): boolean {
-    return this.stateService.env.customize?.enterprise === 'pumpologia'
-      && /(^|\/)block\/[^/?]+/.test(this.router.url);
-  }
-
   constructor(
     public stateService: StateService,
     private cd: ChangeDetectorRef,
