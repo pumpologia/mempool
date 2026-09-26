@@ -48,7 +48,7 @@ class MempoolBlocks {
 
   /** @asyncUnsafe */
   public async updatePools$(): Promise<void> {
-    if (['mainnet', 'testnet', 'signet', 'testnet4', 'regtest'].includes(config.MEMPOOL.NETWORK) === false) {
+    if (['mainnet', 'testnet', 'signet', 'regtest'].includes(config.MEMPOOL.NETWORK) === false) {
       this.pools = {};
       return;
     }

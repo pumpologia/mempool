@@ -15,7 +15,6 @@ export class NavigationService {
       subnets: [
         { name: 'mainnet', path: '' },
         { name: 'testnet', path: this.stateService.env.ROOT_NETWORK === 'testnet' ? '/' : '/testnet' },
-        { name: 'testnet4', path: this.stateService.env.ROOT_NETWORK === 'testnet4' ? '/' : '/testnet4' },
         { name: 'signet', path: this.stateService.env.ROOT_NETWORK === 'signet' ? '/' : '/signet' },
         { name: 'regtest', path: this.stateService.env.ROOT_NETWORK === 'regtest' ? '/' : '/regtest' },
       ],
@@ -90,7 +89,7 @@ export class NavigationService {
       }
       if (route.url?.length) {
         path = [path, ...route.url.map(segment => segment.path).filter(path => {
-          return path.length && !['testnet', 'testnet4', 'signet', 'regtest'].includes(path);
+          return path.length && !['testnet', 'signet', 'regtest'].includes(path);
         })].join('/');
       }
       route = route.firstChild;

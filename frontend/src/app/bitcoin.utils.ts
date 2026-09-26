@@ -272,11 +272,6 @@ const featureActivation = {
     segwit: 872730,
     taproot: 2032291,
   },
-  testnet4: {
-    rbf: 0,
-    segwit: 0,
-    taproot: 0,
-  },
   signet: {
     rbf: 0,
     segwit: 0,

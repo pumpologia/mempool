@@ -103,7 +103,7 @@ La configuration runtime observée active :
 
 Elle désactive :
 
-- testnet, testnet4, signet et regtest ;
+- testnet, signet et regtest ;
 - Liquid et Liquid testnet ;
 - Lightning ;
 - audit de blocs ;

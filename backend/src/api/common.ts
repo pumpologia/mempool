@@ -373,7 +373,6 @@ export class Common {
   // Individual versioned standardness rules
 
   static V3_STANDARDNESS_ACTIVATION_HEIGHT = {
-    'testnet4': 42_000,
     'testnet': 2_900_000,
     'signet': 211_000,
     'regtest': 0,
@@ -397,7 +396,6 @@ export class Common {
   }
 
   static ANCHOR_STANDARDNESS_ACTIVATION_HEIGHT = {
-    'testnet4': 42_000,
     'testnet': 2_900_000,
     'signet': 211_000,
     'regtest': 0,
@@ -418,7 +416,6 @@ export class Common {
 
   // Ephemeral dust is a new concept that allows a single dust output in a transaction, provided the transaction is zero fee
   static EPHEMERAL_DUST_STANDARDNESS_ACTIVATION_HEIGHT = {
-    'testnet4': 90_500,
     'testnet': 4_550_000,
     'signet': 260_000,
     'regtest': 0,
@@ -439,7 +436,6 @@ export class Common {
 
   // OP_RETURN size & count limits were lifted in v28.3/v29.2/v30.0
   static OP_RETURN_STANDARDNESS_ACTIVATION_HEIGHT = {
-    'testnet4': 108_000,
     'testnet': 4_750_000,
     'signet': 276_500,
     'regtest': 0,
@@ -462,7 +458,6 @@ export class Common {
 
   // New legacy sigops limit started to be enforced in v30.0
   static LEGACY_SIGOPS_STANDARDNESS_ACTIVATION_HEIGHT = {
-    'testnet4': 108_000,
     'testnet': 4_750_000,
     'signet': 276_500,
     'regtest': 0,
@@ -868,7 +863,7 @@ export class Common {
 
   static indexingEnabled(): boolean {
     return (
-      ['mainnet', 'testnet', 'signet', 'testnet4', 'regtest'].includes(config.MEMPOOL.NETWORK) &&
+      ['mainnet', 'testnet', 'signet', 'regtest'].includes(config.MEMPOOL.NETWORK) &&
       config.DATABASE.ENABLED === true &&
       config.MEMPOOL.INDEXING_BLOCKS_AMOUNT !== 0
     );
@@ -906,7 +901,7 @@ export class Common {
   // otherwise queries will join against a blocks_prices table that is never populated
   static blockPricesIndexingEnabled(): boolean {
     return (
-      !['testnet', 'signet', 'testnet4', 'regtest'].includes(config.MEMPOOL.NETWORK) &&
+      !['testnet', 'signet', 'regtest'].includes(config.MEMPOOL.NETWORK) &&
       config.FIAT_PRICE.ENABLED === true
     );
   }

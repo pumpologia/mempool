@@ -76,7 +76,6 @@ export class BlockchainBlocksComponent implements OnInit, OnChanges, OnDestroy {
     liquid: ['var(--liquid)', 'var(--testnet-alt)'],
     'liquidtestnet': ['var(--liquidtestnet)', 'var(--liquidtestnet-alt)'],
     testnet: ['var(--testnet)', 'var(--testnet-alt)'],
-    testnet4: ['var(--testnet)', 'var(--testnet-alt)'],
     signet: ['var(--signet)', 'var(--signet-alt)'],
     regtest: ['var(--regtest)', 'var(--regtest-alt)'],
   };

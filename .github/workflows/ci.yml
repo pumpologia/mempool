@@ -315,7 +315,7 @@ jobs:
       fail-fast: false
       matrix:
         node: ["24.13.0"]
-        module: ["mempool", "liquid", "testnet4"]
+        module: ["mempool", "liquid"]
 
     name: E2E tests for ${{ matrix.module }}
     steps:
@@ -422,31 +422,6 @@ jobs:
           browser: "chrome"
           ci-build-id: "${{ github.sha }}-${{ github.workflow }}-${{ github.event_name }}"
         env:
-          COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title }}
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
-
-      # testnet
-      - name: Chrome browser tests (${{ matrix.module }})
-        if: ${{ matrix.module == 'testnet4' }}
-        uses: cypress-io/github-action@09090944bd8aaa2a517cefb6e38bf1aae336b42b # v7.4.3
-        with:
-          tag: ${{ github.event_name }}
-          working-directory: ${{ matrix.module }}/frontend
-          build: npm run config:defaults:mempool
-          start: npm run start:parameterized
-          wait-on: "http://localhost:4200"
-          wait-on-timeout: 120
-          record: true
-          parallel: true
-          spec: |
-            cypress/e2e/testnet4/*.spec.ts
-          group: Tests on Chrome (${{ matrix.module }})
-          browser: "chrome"
-          ci-build-id: "${{ github.sha }}-${{ github.workflow }}-${{ github.event_name }}"
-        env:
-          CYPRESS_REROUTE_TESTNET: true
           COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title }}
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

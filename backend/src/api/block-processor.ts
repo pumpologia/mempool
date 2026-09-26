@@ -38,7 +38,6 @@ export interface BlockProcessingResult {
 const CM_ACTIVATION_HEIGHT: { [network: string]: number } = {
   'mainnet': 940000,
   'testnet': 4860000,
-  'testnet4': 125000,
   'signet': 294000,
   'regtest': 0,
 };

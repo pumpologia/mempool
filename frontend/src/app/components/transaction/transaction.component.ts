@@ -1025,11 +1025,6 @@ export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
           return false;
         }
         break;
-      case 'testnet4':
-        if (blockHeight < this.stateService.env.TESTNET4_BLOCK_AUDIT_START_HEIGHT) {
-          return false;
-        }
-        break;
       case 'signet':
         if (blockHeight < this.stateService.env.SIGNET_BLOCK_AUDIT_START_HEIGHT) {
           return false;
@@ -1050,11 +1045,6 @@ export class TransactionComponent implements OnInit, AfterViewInit, OnDestroy {
     switch (this.stateService.network) {
       case 'testnet':
         if (this.stateService.env.TESTNET_TX_FIRST_SEEN_START_HEIGHT && blockHeight >= this.stateService.env.TESTNET_TX_FIRST_SEEN_START_HEIGHT) {
-          return true;
-        }
-        break;
-      case 'testnet4':
-        if (this.stateService.env.TESTNET4_TX_FIRST_SEEN_START_HEIGHT && blockHeight >= this.stateService.env.TESTNET4_TX_FIRST_SEEN_START_HEIGHT) {
           return true;
         }
         break;

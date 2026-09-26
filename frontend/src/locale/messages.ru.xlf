@@ -5151,15 +5151,6 @@
         </context-group>
         <note priority="1" from="description">shared.block-remaining</note>
       </trans-unit>
-      <trans-unit id="f563861ed63d1c6ceffeaf29e8823bb47ed3a0eb" datatype="html">
-        <source>Testnet4 Faucet</source>
-        <target>Кран Testnet4</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/components/faucet/faucet.component.html</context>
-          <context context-type="linenumber">4</context>
-        </context-group>
-        <note priority="1" from="description">testnet4.faucet</note>
-      </trans-unit>
       <trans-unit id="615ba6c4511a36f93c225c725935fdbf16f162a5" datatype="html">
         <source>Amount (sats)</source>
         <target>Сумма (саты)</target>
@@ -5168,15 +5159,6 @@
           <context context-type="linenumber">64</context>
         </context-group>
         <note priority="1" from="description">amount-sats</note>
-      </trans-unit>
-      <trans-unit id="2183c5be8b7f219129fdbd07ed2dd14d67fd1711" datatype="html">
-        <source>Request Testnet4 Coins</source>
-        <target>Запросить монеты Testnet4</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/components/faucet/faucet.component.html</context>
-          <context context-type="linenumber">83</context>
-        </context-group>
-        <note priority="1" from="description">testnet4.request-coins</note>
       </trans-unit>
       <trans-unit id="6ff9e8b67bc2cda7569dc0996d4c2fd858c5d4e6" datatype="html">
         <source>Either 2x the minimum, or the Low Priority rate (whichever is lower)</source>
@@ -11182,15 +11164,6 @@
         </context-group>
         <note priority="1" from="description">footer.testnet3-explorer</note>
       </trans-unit>
-      <trans-unit id="46a03052a962e6b21651effc05391e2a4e26946a" datatype="html">
-        <source>Testnet4 Explorer</source>
-        <target>Обозреватель Testnet4</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/global-footer/global-footer.component.html</context>
-          <context context-type="linenumber">98</context>
-        </context-group>
-        <note priority="1" from="description">footer.testnet4-explorer</note>
-      </trans-unit>
       <trans-unit id="c9bf4b5d16994e42297cbe174e831a7edd9cfe72" datatype="html">
         <source>Signet Explorer</source>
         <target>Обозреватель Signet</target>
@@ -11311,15 +11284,6 @@
           <context context-type="linenumber">4</context>
         </context-group>
         <note priority="1" from="description">warning-testnet</note>
-      </trans-unit>
-      <trans-unit id="52a5264f8dcf69b24e496d0a37fbcdd688c54353" datatype="html">
-        <source>Testnet3 is deprecated, and will soon be replaced by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/testnet4&quot;&gt;"/>Testnet4<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></source>
-        <target>Testnet3 устарел и скоро будет заменен на <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/testnet4&quot;&gt;"/>Testnet4<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/app/shared/components/testnet-alert/testnet-alert.component.html</context>
-          <context context-type="linenumber">6</context>
-        </context-group>
-        <note priority="1" from="description">testnet3-deprecated</note>
       </trans-unit>
       <trans-unit id="6052761358428332094" datatype="html">
         <source>Batch payment</source>

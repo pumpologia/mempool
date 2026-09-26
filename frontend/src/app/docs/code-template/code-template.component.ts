@@ -114,9 +114,6 @@ export class CodeTemplateComponent implements OnInit {
       if (this.network === 'testnet') {
         codeText = this.replaceJSPlaceholder(codeText, code.codeSampleTestnet.esModule);
       }
-      if (this.network === 'testnet4') {
-        codeText = this.replaceJSPlaceholder(codeText, code.codeSampleTestnet.esModule);
-      }
       if (this.network === 'signet') {
         codeText = this.replaceJSPlaceholder(codeText, code.codeSampleSignet.esModule);
       }
@@ -148,9 +145,6 @@ init();`;
         codeText = this.replaceJSPlaceholder(codeText, code.codeSampleMainnet.esModule);
       }
       if (this.network === 'testnet') {
-        codeText = this.replaceJSPlaceholder(codeText, code.codeSampleTestnet.esModule);
-      }
-      if (this.network === 'testnet4') {
         codeText = this.replaceJSPlaceholder(codeText, code.codeSampleTestnet.esModule);
       }
       if (this.network === 'signet') {
@@ -219,9 +213,6 @@ yarn add @mempool/liquid.js`;
       if (this.network === 'testnet') {
         return this.replaceCurlPlaceholder(code.codeTemplate.curl, code.codeSampleTestnet);
       }
-      if (this.network === 'testnet4') {
-        return this.replaceCurlPlaceholder(code.codeTemplate.curl, code.codeSampleTestnet);
-      }
       if (this.network === 'signet') {
         return this.replaceCurlPlaceholder(code.codeTemplate.curl, code.codeSampleSignet);
       }
@@ -244,9 +235,6 @@ yarn add @mempool/liquid.js`;
     if (this.network === 'testnet') {
       return code.codeSampleTestnet.response;
     }
-    if (this.network === 'testnet4') {
-      return code.codeSampleTestnet.response;
-    }
     if (this.network === 'signet') {
       return code.codeSampleSignet.response;
     }
@@ -260,7 +248,7 @@ yarn add @mempool/liquid.js`;
   }
 
   wrapPythonTemplate(code: any) {
-    return ( ( this.network === 'testnet' || this.network === 'testnet4' || this.network === 'signet' ) ? ( code.codeTemplate.python.replace( 'wss://mempool.space/api/v1/ws', 'wss://mempool.space/' + this.network + '/api/v1/ws' ) ) : code.codeTemplate.python );
+    return ( ( this.network === 'testnet' || this.network === 'signet' ) ? ( code.codeTemplate.python.replace( 'wss://mempool.space/api/v1/ws', 'wss://mempool.space/' + this.network + '/api/v1/ws' ) ) : code.codeTemplate.python );
   }
 
   replaceJSPlaceholder(text: string, code: any) {

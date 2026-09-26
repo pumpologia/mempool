@@ -8,3 +8,7 @@ frontend/src/resources/config.js
 target
 docker/backend/start_ci.sh
 .env.pumpologia
+
+# Production inspection/rollback snapshots are host-local evidence.
+*.rollback-*
+*.inspect.rollback-*.json

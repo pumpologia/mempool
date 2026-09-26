@@ -53,47 +53,6 @@ const testnetRoutes: Routes = browserWindowEnv.TESTNET_ENABLED ? [
   },
 ] : [];
 
-const testnet4Routes: Routes = browserWindowEnv.TESTNET4_ENABLED ? [
-  {
-    path: 'testnet4',
-    children: [
-      {
-        path: '',
-        pathMatch: 'full',
-        loadChildren: () => import('@app/bitcoin-graphs.module').then(m => m.BitcoinGraphsModule),
-        data: { preload: true },
-      },
-      {
-        path: '',
-        loadChildren: () => import('@app/master-page.module').then(m => m.MasterPageModule),
-        data: { preload: true },
-      },
-      {
-        path: 'wallet',
-        children: [],
-        component: AddressGroupComponent,
-        data: {
-          networkSpecific: true,
-        }
-      },
-      {
-        path: 'status',
-        data: { networks: ['bitcoin', 'liquid'] },
-        component: StatusViewComponent
-      },
-      {
-        path: '',
-        loadChildren: () => import('@app/bitcoin-graphs.module').then(m => m.BitcoinGraphsModule),
-        data: { preload: true },
-      },
-      {
-        path: '**',
-        redirectTo: '/testnet4'
-      },
-    ]
-  },
-] : [];
-
 const signetRoutes: Routes = browserWindowEnv.SIGNET_ENABLED ? [
   {
     path: 'signet',
@@ -188,7 +147,6 @@ const regtestRoutes: Routes = browserWindowEnv.REGTEST_ENABLED ? [
 
 let routes: Routes = [
   ...testnetRoutes,
-  ...testnet4Routes,
   ...signetRoutes,
   ...regtestRoutes,
   {
@@ -225,10 +183,6 @@ let routes: Routes = [
       },
       {
         path: 'testnet',
-        loadChildren: () => import('@app/previews.module').then(m => m.PreviewsModule)
-      },
-      {
-        path: 'testnet4',
         loadChildren: () => import('@app/previews.module').then(m => m.PreviewsModule)
       },
       {

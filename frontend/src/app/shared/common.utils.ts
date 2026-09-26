@@ -154,7 +154,7 @@ export function nextRoundNumber(num: number): number {
 export function seoDescriptionNetwork(network: string): string {
   if( network === 'liquidtestnet' || network === 'testnet' ) {
     return ' Testnet';
-  } else if( network === 'signet' || network === 'testnet' || network === 'testnet4' || network === 'regtest') {
+  } else if( network === 'signet' || network === 'testnet' || network === 'regtest') {
     return ' ' + network.charAt(0).toUpperCase() + network.slice(1);
   }
   return '';
@@ -197,7 +197,6 @@ export function renderSats(value: number, network: string, mode: 'sats' | 'btc' 
       prefix = 'tL';
       break;
     case 'testnet':
-    case 'testnet4':
       prefix = 't';
       break;
     case 'signet':

@@ -408,7 +408,6 @@ describe('Mainnet', () => {
       cy.waitForSkeletonGone();
 
       //TODO(knorrium): add a check for the proxied server
-      // cy.changeNetwork('testnet4');
 
       cy.changeNetwork('signet');
       cy.changeNetwork('mainnet');

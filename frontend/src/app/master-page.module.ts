@@ -14,7 +14,6 @@ import { StaleList } from '@components/stale-list/stale-list.component';
 import { StratumList } from '@components/stratum/stratum-list/stratum-list.component';
 import { ServerHealthComponent } from '@components/server-health/server-health.component';
 import { ServerStatusComponent } from '@components/server-health/server-status.component';
-import { FaucetComponent } from '@components/faucet/faucet.component';
 import { SimpleProofWidgetComponent } from '@components/simpleproof-widget/simpleproof-widget.component';
 import { SimpleProofCuboWidgetComponent } from '@components/simpleproof-widget/simpleproof-cubo-widget.component';
 
@@ -131,21 +130,6 @@ if (window['__env']?.OFFICIAL_MEMPOOL_SPACE) {
     data: { networks: ['bitcoin', 'liquid'] },
     component: ServerStatusComponent
   });
-  if (window['isMempoolSpaceBuild']) {
-    routes[0].children.push({
-      path: 'faucet',
-      canActivate: [(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
-        return state.url.startsWith('/testnet4/');
-      }],
-      component: StartComponent,
-      data: { preload: true, networkSpecific: true },
-      children: [{
-        path: '',
-        data: { networks: ['bitcoin'] },
-        component: FaucetComponent,
-      }]
-    });
-  }
 }
 
 if (window['__env']?.customize?.dashboard?.widgets?.some(w => w.component ==='simpleproof')) {

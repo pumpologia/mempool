@@ -48,7 +48,6 @@ export type SignaturesMode = 'all' | 'interesting' | 'none' | null;
 export interface Env {
   MAINNET_ENABLED: boolean;
   TESTNET_ENABLED: boolean;
-  TESTNET4_ENABLED: boolean;
   SIGNET_ENABLED: boolean;
   REGTEST_ENABLED: boolean;
   LIQUID_ENABLED: boolean;
@@ -72,12 +71,10 @@ export interface Env {
   AUDIT: boolean;
   MAINNET_BLOCK_AUDIT_START_HEIGHT: number;
   TESTNET_BLOCK_AUDIT_START_HEIGHT: number;
-  TESTNET4_BLOCK_AUDIT_START_HEIGHT: number;
   SIGNET_BLOCK_AUDIT_START_HEIGHT: number;
   REGTEST_BLOCK_AUDIT_START_HEIGHT: number;
   MAINNET_TX_FIRST_SEEN_START_HEIGHT: number;
   TESTNET_TX_FIRST_SEEN_START_HEIGHT: number;
-  TESTNET4_TX_FIRST_SEEN_START_HEIGHT: number;
   SIGNET_TX_FIRST_SEEN_START_HEIGHT: number;
   REGTEST_TX_FIRST_SEEN_START_HEIGHT: number;
   HISTORICAL_PRICE: boolean;
@@ -97,7 +94,6 @@ export interface Env {
 const defaultEnv: Env = {
   'MAINNET_ENABLED': true,
   'TESTNET_ENABLED': false,
-  'TESTNET4_ENABLED': false,
   'SIGNET_ENABLED': false,
   'REGTEST_ENABLED': false,
   'LIQUID_ENABLED': false,
@@ -121,12 +117,10 @@ const defaultEnv: Env = {
   'AUDIT': false,
   'MAINNET_BLOCK_AUDIT_START_HEIGHT': 0,
   'TESTNET_BLOCK_AUDIT_START_HEIGHT': 0,
-  'TESTNET4_BLOCK_AUDIT_START_HEIGHT': 0,
   'SIGNET_BLOCK_AUDIT_START_HEIGHT': 0,
   'REGTEST_BLOCK_AUDIT_START_HEIGHT': 0,
   'MAINNET_TX_FIRST_SEEN_START_HEIGHT': 0,
   'TESTNET_TX_FIRST_SEEN_START_HEIGHT': 0,
-  'TESTNET4_TX_FIRST_SEEN_START_HEIGHT': 0,
   'SIGNET_TX_FIRST_SEEN_START_HEIGHT': 0,
   'REGTEST_TX_FIRST_SEEN_START_HEIGHT': 0,
   'HISTORICAL_PRICE': true,
@@ -410,7 +404,7 @@ export class StateService {
     // (?:preview\/)?                               optional "preview" prefix (non-capturing)
     // (testnet|signet)/                            network string (captured as networkMatches[1])
     // ($|\/)                                       network string must end or end with a slash
-    let networkMatches: object = url.match(/^\/(?:[a-z]{2}(?:-[A-Z]{2})?\/)?(?:preview\/)?(testnet4?|signet|regtest)($|\/)/);
+    let networkMatches: object = url.match(/^\/(?:[a-z]{2}(?:-[A-Z]{2})?\/)?(?:preview\/)?(testnet|signet|regtest)($|\/)/);
 
     if (!networkMatches && this.env.ROOT_NETWORK) {
       networkMatches = { 1: this.env.ROOT_NETWORK };
@@ -432,12 +426,6 @@ export class StateService {
             this.network = 'testnet';
             this.networkChanged$.next('testnet');
           }
-        }
-        return;
-      case 'testnet4':
-        if (this.network !== 'testnet4') {
-          this.network = 'testnet4';
-          this.networkChanged$.next('testnet4');
         }
         return;
       case 'regtest':
@@ -476,7 +464,6 @@ export class StateService {
       '': 'Mainnet',
       'signet': 'Signet',
       'testnet': 'Testnet3',
-      'testnet4': 'Testnet4',
       'regtest': 'Regtest',
       'liquid': 'Liquid',
       'liquidtestnet': 'Liquid Testnet',
@@ -513,7 +500,7 @@ export class StateService {
   }
 
   isAnyTestnet(): boolean {
-    return ['testnet', 'testnet4', 'signet', 'regtest', 'liquidtestnet'].includes(this.network);
+    return ['testnet', 'signet', 'regtest', 'liquidtestnet'].includes(this.network);
   }
   resetChainTip() {
     this.latestBlockHeight = -1;

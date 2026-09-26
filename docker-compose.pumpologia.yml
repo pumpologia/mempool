@@ -49,6 +49,10 @@ services:
     group_add:
       - "987"
     environment:
+      # Node caps the old space near 4 GB by default. The backend sat at ~80 % of that
+      # continuously ("Used 80.45% of heap limit"), which buys constant major GC on a host
+      # with 31 GB free. Raising the ceiling costs nothing while unused.
+      NODE_OPTIONS: "--max-old-space-size=8192"
       MEMPOOL_NETWORK: mainnet
       MEMPOOL_BACKEND: electrum
       BACKEND_HTTP_PORT: "8999"
