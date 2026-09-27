@@ -529,13 +529,17 @@ class PumpologiaRoutes {
   private async sanitizeOperations(items: OperationRecord[], markPrice: number | null): Promise<IndexerRecord[]> {
     const positionIds = Array.from(new Set(items.map(item => this.text(item.position_id)).filter(id => POSITION_REGEX.test(id))));
     const positions = new Map<string, PositionRecord>();
-    await Promise.all(positionIds.map(async positionId => {
-      try {
-        positions.set(positionId, this.asRecord(await this.getIndexer(`positions/${encodeURIComponent(positionId)}`)) as PositionRecord);
-      } catch {
-        // A protocol event can outlive a position lookup. The event still gets a minimal card.
-      }
-    }));
+    try {
+      await Promise.all(positionIds.map(async positionId => {
+        try {
+          positions.set(positionId, this.asRecord(await this.getIndexer(`positions/${encodeURIComponent(positionId)}`)) as PositionRecord);
+        } catch {
+          // A protocol event can outlive a position lookup. The event still gets a minimal card.
+        }
+      }));
+    } catch {
+      // Every lookup is isolated above; retain this fail-closed guard for the aggregate.
+    }
 
     return items.map(item => {
       const positionId = this.text(item.position_id);
